@@ -1,0 +1,535 @@
+#include "TH1F.h"
+#include "TFile.h"
+#include "TF1.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+#include "TLatex.h"
+#include <array>
+#include <iostream>
+#include <vector>
+#include <tuple>
+#include <TString.h>
+#include <fstream>
+#include <cmath>
+#include <iomanip>
+#include <algorithm>
+using namespace std;
+
+
+
+// Distribution E_gamma
+
+double N_EPA(double Eb, double Eg, double Q2_max) {
+   const double alpha = 1.0 / 137.0;
+   const double PI = 3.141592653589793;
+
+
+   double x = Eg / Eb;
+   double me = 0.00051;
+   double Q2_min = me * me * x * x / (1 - x);
+
+
+   return (1 / Eb) * alpha / (PI * x) * ((1 - x + x * x / 2) * log(Q2_max / Q2_min) - (1 - x));
+}
+
+double N_Brem(double Eg, double Eb, double d, double X0) {
+   return (0.5 * d / X0) * (1 / Eg) * ((4.0 / 3.0) - (4.0 / 3.0) * (Eg / Eb) + Eg * Eg / (Eb * Eb));
+}
+
+// Classe section efficace
+
+class Physics {
+
+
+   public:
+
+
+       double cross_section_holo_2(double t, double Epho, double D_0, double m_A, double m_D, int expo = 3, double A_0 = 0.430, double N = 2.032, double Mn = 0.935, double Mv = 1.019) {
+           // Paramètre de normalisation
+           double N_e = N;  // En nb GeV^(-2)
+   
+           // Calcul de la variable de Mandelstam s
+           double s = pow(Mn, 2) + 2 * Mn * Epho;
+   
+           // Facteur tilde F
+           double tilde_F = pow((s - pow(Mn, 2)) / 2.0, 4);
+   
+           // Paramètre eta
+           double eta = 0;
+   
+           // Facteurs A(t) et D(t)
+           double A_t = A_0 / pow(1 - (t / pow(m_A, 2)), expo);
+           double D_t = D_0 / pow(1 - (t / pow(m_D, 2)), expo);
+   
+           // Calcul de la section efficace
+           double sigma = pow(N_e, 2) * (1.0 / (64 * M_PI * pow(s - pow(Mn, 2), 2))) *
+                          pow((A_t + pow(eta, 2) * D_t) / A_0, 2) * tilde_F * 8;
+   
+           return sigma;
+       }      
+
+
+       double Lambda(double x, double y, double z) {
+         return (x - y - z)*(x - y - z) - 4 * y*z;
+     }
+
+
+       //From Byukling Kayanti Formula (5.14) Page 86
+
+      double T_min(double ma_2, double mb_2, double m1_2, double m2_2, double s) // arguments are squares of masses of particles in the reaction a+b->1+2, and s is the square of the total c.m. energy i.e. (a+b)^2
+      {
+         return ma_2 + m1_2 - (1 / (2 * s))*((s + ma_2 - mb_2)*(s + m1_2 - m2_2) - sqrt(Lambda(s, ma_2, mb_2) * Lambda(s, m1_2, m2_2)));
+      }
+
+      //From Byukling Kayanti Formula (5.14) page 86
+
+      double T_max(double ma_2, double mb_2, double m1_2, double m2_2, double s) {
+         return ma_2 + m1_2 - (1 / (2 * s))*((s + ma_2 - mb_2)*(s + m1_2 - m2_2) + sqrt(Lambda(s, ma_2, mb_2) * Lambda(s, m1_2, m2_2)));
+      }
+
+   };
+
+
+
+
+
+// Generateur 
+void PhaseSpaceK(double nb_fichier, double nb_event, double code) {
+
+   //paramètres distrib E_gamma 
+   double Eb = 10.6;   
+   double Q2_max = 1; 
+   double d = 5.0;     
+   double X0 = 929.0;    
+
+   // plage de calcul de la distrib
+   double Eg_min = 1.58;
+   double Eg_max = 10.6;
+   int points = 1000;
+
+   //masse particules
+   double me = 0.00051;
+   double m_kaons = 0.4937;
+   double m_phi = 1.019;
+   double m_jpsi = 3.069;
+   double Mp = 0.938;
+   double m_muons = 0.105;
+
+   // compteur de particules
+   double counter = 0;
+
+   Physics phys;
+
+   // paramettres section efficace
+
+   double D_0 = -1.52;
+   double m_A = 1.612;
+   double m_D = 1.206;
+   double A_O = 0.430;
+   double N = 2.032;
+
+   //ini fichiers
+   std::vector<std::ofstream> files(nb_fichier);
+
+   // Définition du proton cible au repos
+   TLorentzVector target(0.0, 0.0, 0.0, Mp);  
+  
+   Double_t masses[2] = {Mp, m_phi}; // masse proton et phi
+
+   TGenPhaseSpace event;
+
+   // fichier de sortie pour la distrib
+   // std::ofstream file("data.dat");
+
+   // Générer les données pour N_EPA, N_Brem et leur somme dans un txt (pour tracer sur python apres)
+   // for (int i = 0; i <= points; ++i) {
+
+       // double Eg = Eg_min + i * (Eg_max - Eg_min) / points; // Calcul de Eg a chaque iteration
+
+       // Calcul des valeurs pour N_EPA, N_Brem et leur somme
+       // double n_epa = N_EPA(Eb, Eg, Q2_max); // poids  EPA
+       // double n_brem = N_Brem(Eg, Eb, d, X0); // poids  Brem
+       // double n_sum = n_epa + n_brem; // somme poids 
+
+       // file << Eg << "\t" << n_epa << "\t" << n_brem << "\t" << n_sum << "\n";
+   //}
+
+   // file.close();
+
+   // std::cout << "Les données ont été enregistrées dans data.dat" << std::endl;
+   
+
+   // initialisation des histo
+
+   TH1F *hMphi = new TH1F("hMphi", "mass of phi", 100, 0, 1.05);
+   TH1F *hMee = new TH1F("hMee", "invariant mass of e+ e-", 100, 0.9, 1.1);
+
+   TH1F *hE = new TH1F("hE", "Histogram E_gamma", 100, 1.50, 12);
+
+   TH1F *thetaphi = new TH1F("thetaphi", "histo angle theta du meson #phi", 400, -180, 180);
+
+   TH1F *htetha = new TH1F("htheta", "Histogramme angle entre les momentum K+ K-", 400, 0, 180);
+   TH1F *hdelta_theta = new TH1F("hdelta_theta", "Histogramme delta theta K+ K-", 400, -180, 180);
+   TH1F *hdelta_phi = new TH1F("hdelta_phi", "Histogramme delta phi K+ K-", 400, -360, 360);
+
+
+   TH2F *h2D = new TH2F("h2D", "Histogram |t| and E gamma", 600, 0, 12, 1000, -0.1, 20);  
+   TH2F *h2D2 = new TH2F("h2D2", "Histogram p and theta for phi", 1000, 0, 90, 500, -0.1, 11); 
+   TH2F *h2D3 = new TH2F("h2D3", "Histogram p and theta for K-", 1000, 0, 180, 500, -0.1, 11); 
+   TH2F *h2D4 = new TH2F("h2D4", "Histogram p and theta for K+", 1000, 0, 180, 500, -0.1, 11);  
+   TH2F *h2D5 = new TH2F("h2D5", "Histogram p and theta for proton", 1000, 0, 90, 500, -0.1, 11);  
+   TH2F *h2D6 = new TH2F("h2D6", "Histrogram #theta of meson #phi vs delta angle phi of K+ K-", 400, -200, 200, 400, -5, 70);  
+   
+
+   // Création et ouverture des fichiers
+   for (int i = 0; i < nb_fichier; ++i) {
+       std::string filename = "PhiGen_" + std::to_string(i) + ".txt";
+       files[i].open(filename);
+
+       if (!files[i]) {
+           std::cerr << "Erreur lors de l'ouverture du fichier : " << filename << std::endl;
+       }
+
+
+       for (Int_t n = 0; n < nb_event; n++) {
+
+
+
+         Double_t E_gamma = gRandom->Uniform(Eg_min, Eg_max);
+         Double_t Poids_gamma = (N_EPA(Eb, E_gamma, Q2_max) + N_Brem(E_gamma, Eb, d, X0));
+         TLorentzVector beam(0.0, 0.0, E_gamma, E_gamma);
+         TLorentzVector W = beam + target;   
+         event.SetDecay(W, 2, masses); 
+         Double_t weight = event.Generate();
+  
+         TLorentzVector *pProton = event.GetDecay(0); // Proton final
+         TLorentzVector *pPhi    = event.GetDecay(1); //  phi
+  
+         Double_t t = (beam - *pPhi).M()*(beam - *pPhi).M();  //calcul de t d'une maniere (attention renvoi |t| et pas t)
+         Double_t t_3 = 1.019*1.019 - 2*(E_gamma*pPhi->E() - E_gamma*pPhi->Pz()); // calcul de t d'une autre maniere (renvoi bien t)
+  
+         double weight_crosssection = phys.cross_section_holo_2(t_3, E_gamma, D_0, m_A, m_D);
+         cout << "Section efficace : " << weight_crosssection << " GeV^-2" << endl;
+  
+  
+         Double_t E = E_gamma - pPhi->E();
+         Double_t px = 0 - pPhi->Px();
+         Double_t py = 0 - pPhi->Py();
+         Double_t pz = E_gamma - pPhi->Pz();
+  
+         Double_t t_2 = E*E - px*px -py*py - pz*pz; //calcul de t d'une 3eme maniere 
+  
+         // verification de la conservation de l'énergie
+         Double_t E_ini = E_gamma + 0.938;
+         Double_t E_fin = pPhi->E() + pProton->E();
+  
+         // verification que somme impulsion ini = somme impulsion final
+         // normalement tout les P_diff valent 0
+  
+         Double_t Px_diff = 0 + 0 - pProton->Px() - pPhi->Px();
+         Double_t Py_diff = 0 + 0 - pProton->Py() - pPhi->Py();
+         Double_t Pz_diff = E_gamma + 0 - pProton->Pz() - pPhi->Pz();
+  
+         // print plein de choses pour vérif
+  
+         if (n % 1000 == 0) {
+          std::cout << "Événement " << n << " : E_gamma = " << E_gamma << std::endl;
+          std::cout << "Événement " << n << " : m = " << pPhi->M() << std::endl;
+          std::cout << "Calcul de t " << std::endl;
+          std::cout << "Événement " << n << " : t = " << t << std::endl;
+          std::cout << "Événement " << n << " : t2 = " << t_2 << std::endl;
+          std::cout << "Événement " << n << " : t3 = " << t_3 << std::endl;
+          std::cout << "Verification conservation de l'énergie " << std::endl;
+          std::cout << "Événement " << n << " : E ini = " << E_ini << std::endl;
+          std::cout << "Événement " << n << " : E fini = " << E_fin << std::endl;
+          std::cout << "Verification somme impulsion ini = somme impulsion fini " << std::endl;
+          std::cout << "Événement " << n << " : Px_diff = " << Px_diff << std::endl;
+          std::cout << "Événement " << n << " : Py_diff = " << Py_diff << std::endl;
+          std::cout << "Événement " << n << " : Pz_diff = " << Pz_diff << std::endl;
+          cout << "Section efficace : " << weight_crosssection << " GeV^-2" << endl;
+          std::cout << "pPhi: (E=" << pPhi->E() 
+          
+            << ", px=" << pPhi->Px() 
+            << ", py=" << pPhi->Py() 
+            << ", pz=" << pPhi->Pz() 
+            << ", M=" << pPhi->M() << ")" << std::endl;
+  
+         }
+  
+         // histo fill en pondérant par Poids (celui des E_gamma) et weigh_crosssection (qui vient du modèle de section efficace)
+  
+         // j'ai pas mis les poids "weight" car pour l'instant ils valent 1.
+  
+  
+  
+         double BR = 2.9*1e-4;
+  
+         double s = Mp*Mp + 2*Mp*E_gamma;
+  
+         double t_min = phys.T_min(0., Mp*Mp, 0., Mp*Mp, s);
+         double t_max = phys.T_max(0., Mp*Mp, 0., Mp*Mp, s);
+  
+         double correction_weight = abs(t_min - t_max);
+         double weight_range_photon = Eg_max - Eg_min;
+  
+         double tot_weight = Poids_gamma*correction_weight*weight_crosssection*BR*weight_range_photon;
+  
+         h2D->Fill(E_gamma, t, tot_weight);
+  
+         hE->Fill(E_gamma, Poids_gamma);
+
+         
+  
+  
+         hMphi->Fill(pPhi->M()); 
+  
+  
+         // deuxieme decay : désintégration du phi en e+ e-
+
+  
+         Double_t masses_K[2] = { me, me };
+         TGenPhaseSpace decay;
+         decay.SetDecay(*pPhi, 2, masses_K);
+  
+         Double_t weight2 = decay.Generate();
+  
+         TLorentzVector *pElectron = decay.GetDecay(0);
+         TLorentzVector *pPositron = decay.GetDecay(1);
+         
+  
+         // masse invariante e+e-
+  
+         TLorentzVector Mee = *pElectron + *pPositron;
+         hMee->Fill(Mee.M());
+
+         double angle = pElectron->Vect().Angle(pPositron->Vect());
+         double angle_deg = angle * 180.0 / 3.14;
+
+         double delta_theta = abs(pElectron->Theta() - pPositron->Theta());
+         double delta_theta_deg = delta_theta * 180.0 / 3.14;
+
+         double delta_phi = pElectron->Phi() - pPositron->Phi();
+         double delta_phi_deg = delta_phi * 180.0 / 3.14;
+
+         if (delta_phi_deg>180){
+
+            delta_phi_deg = 360 - delta_phi_deg;
+
+         }
+
+         if (delta_phi_deg<-180){
+            
+
+            delta_phi_deg = -(delta_phi_deg + 360);
+
+         }
+
+         // quand on veux regarder phi -> K+ K- dans des secteurs opposés + coupures en theta et impulsion
+
+         if (code == 1) { //pr dire quel cas on regarde
+
+            if (pElectron->P() > 0.5 && pPositron->P() > 0.5 && pElectron->Theta() * 180.0 / 3.14 > 7 && pElectron->Theta()* 180.0 / 3.14 < 35 && pPositron->Theta()* 180.0 / 3.14 > 7 && pPositron->Theta()* 180.0 / 3.14 < 35) { // coupures sur theta et impulsion
+
+               if (delta_phi_deg < -150 || delta_phi_deg > 150) { // coupures sur delta phi
+   
+                  htetha->Fill(angle_deg);
+                  hdelta_theta->Fill(delta_theta_deg);
+                  hdelta_phi->Fill(delta_phi_deg);
+      
+                  h2D6->Fill(delta_phi_deg, pPhi->Theta()* 180.0 / 3.14, tot_weight);
+                  thetaphi->Fill(pPhi->Theta()* 180.0 / 3.14 );
+                  counter += 1;
+   
+               }
+            
+            }
+
+         }
+
+
+         // quand on veux regarder phi -> e-e+ (ou j/psi -> e-e+) sans conditions de secteurs et tjr coupures en theta et impulsion
+
+         if (code == 2) {
+
+            if (pElectron->P() > 0.5 && pPositron->P() > 0.5 && pElectron->Theta() * 180.0 / 3.14 > 7 && pElectron->Theta()* 180.0 / 3.14 < 35 && pPositron->Theta()* 180.0 / 3.14 > 7 && pPositron->Theta()* 180.0 / 3.14 < 35) { // coupures sur theta et impulsion
+
+               htetha->Fill(angle_deg);
+               hdelta_theta->Fill(delta_theta_deg);
+               hdelta_phi->Fill(delta_phi_deg);
+   
+               h2D6->Fill(delta_phi_deg, pPhi->Theta()* 180.0 / 3.14, tot_weight);
+               thetaphi->Fill(pPhi->Theta()* 180.0 / 3.14 );
+               counter += 1;
+            
+            }
+         }
+  
+         // histo p et theta
+  
+         Double_t theta_phi = pPhi->Theta();
+         Double_t theta_elec = pElectron->Theta();
+         Double_t theta_posi = pPositron->Theta();
+         Double_t theta_proton = pProton->Theta();
+  
+  
+         Double_t P_phi = pPhi->P();
+         Double_t P_elec = pElectron->P();
+         Double_t P_posi = pPositron->P();
+         Double_t P_proton = pProton->P();
+  
+         // fill les autres histo
+  
+         h2D2->Fill(theta_phi*(180/3.14), P_phi, tot_weight);
+         h2D3->Fill(theta_elec*(180/3.14), P_elec, tot_weight);
+         h2D4->Fill(theta_posi*(180/3.14), P_posi, tot_weight);
+         h2D5->Fill(theta_proton*(180/3.14), P_proton, tot_weight);
+  
+  
+         // bizarre les poids weight et weight2 valent tout le temps 1
+  
+         if (n % 1000 == 0) {
+  
+           std::cout << "Événement " << n << " : poids = " << weight << std::endl;
+  
+           std::cout << "Événement " << n << " : poids deuxieme decay = " << weight2 << std::endl;
+        
+         }
+         Double_t vz = 0;
+         double indice_evenement = n;
+  
+  
+         //header
+         files[i] << 3 << setw(15) << 1 << setw(5) << 1 << setw(15) << 0 << setw(15) << 0 << setw(15) << 22 << setw(15) << E_gamma << setw(15) << 0 << setw(15) << indice_evenement << setw(15) << tot_weight << endl;
+  
+         // proton
+         files[i] << 1 << setw(5) << 1 << setw(5) << 1 << setw(7) << 2212 << setw(5) << 0 << setw(5) << 0 << setw(15) << pProton->Px() << setw(15) << pProton->Py() << setw(15) << pProton->Pz();
+         files[i] << setw(15) << pProton->E() << setw(15) << Mp << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
+  
+         // electron
+         files[i] << 2 << setw(5) << -1 << setw(5) << 1 << setw(7) << 11 << setw(5) << 0 << setw(5) << 0 << setw(15) << pElectron->Px() << setw(15) << pElectron->Py() << setw(15) << pElectron->Pz();
+         files[i] << setw(15) << pElectron->E() << setw(15) << me << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
+  
+         // positron
+         files[i] << 3 << setw(5) << 1 << setw(5) << 1 << setw(7) << -11 << setw(5) << 0 << setw(5) << 0 << setw(15) << pPositron->Px() << setw(15) << pPositron->Py() << setw(15) << pPositron->Pz();
+         files[i] << setw(15) << pPositron->E() << setw(15) << me << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
+  
+  
+  
+     }
+
+     files[i].close();
+
+   }
+
+   std::cout << " nb dev trigger " << counter << std::endl;
+
+
+   // ajustement graphique des histos
+
+
+   hE->GetXaxis()->SetTitle("E_gamma [GeV]");  
+   hE->GetYaxis()->SetTitle("weighted distribution");
+
+   htetha->GetXaxis()->SetTitle("angle #psi [degree]");  
+   htetha->GetYaxis()->SetTitle("distribution");
+
+   hdelta_theta->GetXaxis()->SetTitle("angle #theta [degree]");  
+   hdelta_theta->GetYaxis()->SetTitle("distribution");
+
+   hdelta_phi->GetXaxis()->SetTitle("#Delta #phi of pair e+ e- [degree]");  
+   hdelta_phi->GetYaxis()->SetTitle("distribution");
+
+   thetaphi->GetXaxis()->SetTitle("angle #theta du meson #phi [degree]");  
+   thetaphi->GetYaxis()->SetTitle("distribution");
+
+   hdelta_phi->GetXaxis()->SetTitleSize(0.05); 
+   hdelta_phi->GetYaxis()->SetTitleSize(0.05);
+
+   h2D->GetXaxis()->SetTitle("E_gamma [GeV]");  
+   h2D->GetYaxis()->SetTitle("|t| [GeV^{2}]");      
+
+   h2D2->GetXaxis()->SetTitle("#theta [degree]"); 
+   h2D2->GetYaxis()->SetTitle("p [GeV]");        
+
+   h2D3->GetXaxis()->SetTitle("#theta [degree]"); 
+   h2D3->GetYaxis()->SetTitle("p [GeV]");        
+
+   h2D4->GetXaxis()->SetTitle("#theta [degree]"); 
+   h2D4->GetYaxis()->SetTitle("p [GeV]");   
+
+   h2D5->GetXaxis()->SetTitle("#theta [degree]");  
+   h2D5->GetYaxis()->SetTitle("p [GeV]");   
+
+   h2D6->GetXaxis()->SetTitle("#Delta #phi of pair K+ K- [degree]");  
+   h2D6->GetYaxis()->SetTitle("angle #theta of meson #phi [degree]");
+   
+   h2D6->GetXaxis()->SetTitleSize(0.05); 
+   h2D6->GetYaxis()->SetTitleSize(0.05);
+   
+   double echelle_plot_couleur = 0.001;
+   double echelle_angle = 0.001;
+
+
+   TCanvas *c1 = new TCanvas("c1", "Masse du Phi", 800, 600);
+   hMphi->Draw();
+
+   TCanvas *c2 = new TCanvas("c2", "Masse K+K-", 800, 600);
+   hMee->Draw();
+
+   TCanvas *c3 = new TCanvas("c3", "Histogramme |t| et E gamma", 800, 600);
+   h2D->Draw("COLZ");  // "COLZ" palette de couleurs
+
+   h2D->SetMinimum(0);  // échelle de couleur
+   h2D->SetMaximum(echelle_plot_couleur);
+
+   TCanvas *c4 = new TCanvas("c4", "Histogramme E_gamma", 800, 600);
+   hE->Draw(); 
+
+   TCanvas *c9 = new TCanvas("c9", "Histogramme delta psi K+ K-", 800, 600);
+   htetha->Draw();  
+
+   TCanvas *c10 = new TCanvas("c10", "Histogramme delta theta K+ K-", 800, 600);
+   hdelta_theta->Draw(); 
+
+   TCanvas *c11 = new TCanvas("c11", "Histogramme delta phi K+ K-", 800, 600);
+   hdelta_phi->Draw(); 
+
+   TCanvas *c5 = new TCanvas("c5", "Histogramme p et theta pour le phi", 800, 600);
+   h2D2->Draw("COLZ");  
+
+   h2D2->SetMinimum(0);  
+   h2D2->SetMaximum(echelle_plot_couleur);
+
+
+   TCanvas *c6 = new TCanvas("c6", "Histogramme p et theta pour K-", 800, 600);
+   h2D3->Draw("COLZ");  
+
+   h2D3->SetMinimum(0);  
+   h2D3->SetMaximum(echelle_plot_couleur);
+
+
+   TCanvas *c7 = new TCanvas("c7", "Histogramme p et theta pour K+", 800, 600);
+   h2D4->Draw("COLZ");  
+
+   h2D4->SetMinimum(0);  
+   h2D4->SetMaximum(echelle_plot_couleur);
+
+
+   TCanvas *c8 = new TCanvas("c8", "Histogramme p et theta pour le proton", 800, 600);
+   h2D5->Draw("COLZ"); 
+   
+   h2D5->SetMinimum(0);  
+   h2D5->SetMaximum(echelle_plot_couleur);
+
+
+   TCanvas *c12 = new TCanvas("c12", "theta du phi vs delta phi K+ K-", 800, 600);
+   h2D6->Draw("COLZ"); 
+   
+   h2D6->SetMinimum(0);  
+   h2D6->SetMaximum(echelle_angle);
+
+   TCanvas *c13 = new TCanvas("c13", "test", 800, 600);
+   thetaphi->Draw(); 
+
+   std::cout << nb_fichier << "fichiers de " << nb_event << "events generés" << std::endl;
+}
