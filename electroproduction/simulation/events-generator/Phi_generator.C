@@ -152,14 +152,64 @@ class Physics {
 
 
 // Generateur 
-void Phi_generator() {
+void Phi_generator(double nb_fichier, double nb_event) {
+   
+   double bin1 = 200;
+   double bin2 = 100;
 
+   TH2F *pvstheta_el = new TH2F("pvstheta_el", "p vs theta for electron", bin1, 0, 90, bin1, 0.0, 11);
+   TH2F *pvstheta_pr = new TH2F("pvstheta_pr", "p vs theta for proton", bin1, 0, 90, bin1, 0.0, 11);
+   TH2F *pvstheta_kl = new TH2F("pvstheta_kl", "p vs theta for kl", bin1, 0, 90, bin1, 0.0, 11); 
+   TH2F *pvstheta_pip = new TH2F("pvstheta_pip", "p vs theta for pi+", bin1, 0, 90, bin1, 0.0, 11); 
+   TH2F *pvstheta_pim = new TH2F("pvstheta_pim", "p vs theta for pi-", bin1, 0, 90, bin1, 0.0, 11); 
 
+   TH1F *Minv_pip_pim = new TH1F("Minv_pip_pim", "Invariant mass of pi+ pi-", bin2, 0, 1.0);
+   TH1F *Minv_pip_pim_kl = new TH1F("Minv_pip_pim_kl", "Invariant mass of (pi+ pi- + Kl)", 400, 0.8, 1.2);
+   TH1F *hist_vz = new TH1F("hist_vz", "vz of e-", bin2, -6, 1.0);
+   TH1F *hist_Ks_vx = new TH1F("hist_Ks_vx", "vertex x of Ks", bin2, -3, 3.0);
+   TH1F *hist_Ks_vy = new TH1F("hist_Ks_vy", "vertex y of Ks", bin2, -3, 3.0);
+   TH1F *hist_Ks_vz = new TH1F("hist_Ks_vz", "vertex z of Ks", bin2, -4, 4.0);
+   TH1F *hist_dist_vevks = new TH1F("hist_dist_vevks", "distance (x, y, z) between vertex e and vertex Ks", bin2, 2, 4);
+   TH1F *histt = new TH1F("histt", "t", bin2, -8, 0);
+   TH1F *hist_Q2 = new TH1F("hist_Q2", "Q2", bin2, 0, 8);
+
+   auto setTitles = [](TH1 *h, const char *xtitle, const char *ytitle) {
+               h->GetXaxis()->SetTitle(xtitle);
+               h->GetYaxis()->SetTitle(ytitle);
+               h->GetXaxis()->CenterTitle();
+               h->GetYaxis()->CenterTitle();
+   };
+
+   setTitles(pvstheta_el, "#theta [degree]", "p [GeV]");
+   setTitles(pvstheta_pr, "#theta [degree]", "p [GeV]");
+   setTitles(pvstheta_kl, "#theta [degree]", "p [GeV]");
+   setTitles(pvstheta_pip, "#theta [degree]", "p [GeV]");
+   setTitles(pvstheta_pim, "#theta [degree]", "p [GeV]");
+
+   Minv_pip_pim->GetXaxis()->SetTitle("Minv pi+ pi- [GeV]");
+   Minv_pip_pim_kl->GetXaxis()->SetTitle("Minv pi+ pi- + kl [GeV]");
+   hist_vz->GetXaxis()->SetTitle("vz e- [cm]");
+   hist_Ks_vx->GetXaxis()->SetTitle("vx Ks [cm]");
+   hist_Ks_vy->GetXaxis()->SetTitle("vy ks [cm]");
+   hist_Ks_vz->GetXaxis()->SetTitle("vz Ks [cm]");
+   hist_dist_vevks->GetXaxis()->SetTitle("distance vertex e- and vertex Ks [cm]");
+   histt->GetXaxis()->SetTitle("t [GeV^2]");
+   hist_Q2->GetXaxis()->SetTitle("Q2 [GeV^2]");
+
+   //ini files
+   std::vector<std::ofstream> files(nb_fichier);
+
+   //counter
    double sum_weight_phasespace = 0;
    double cpt_nan = 0;
 
+   for (int i = 0; i < nb_fichier; ++i) {
+       std::string filename = "PhiGen_" + std::to_string(i) + ".txt";
+       files[i].open(filename);
 
-   for (int i = 0; i < 2000000; ++i) {
+   for (Int_t n = 0; n < nb_event; n++) {
+
+   double indice_evenement = n; 
 
    //Cross section and some useful functions
    Physics phys;
@@ -172,7 +222,7 @@ void Phi_generator() {
    double m_pions = 0.1395;
 
    //Kinamitics varibale
-   double Q2_min = 0.1;
+   double Q2_min = 1;
    double Q2_max = 7;
    double Eb = 10.6;
 
@@ -180,9 +230,20 @@ void Phi_generator() {
    double Q2, W, W2, W2_min, W2_max, nu, nu_min, nu_max, xb, xb_min, xb_max, theta_electron, phi_electron, E_electron, 
    t, t_min, t_max, E_proton, s_22, u_22, theta_proton_gamma, phi_proton_gamma, theta_ks, phi_ks, theta_pi, phi_pi;
 
-   //Weight of PhaseSpace
-   double weight;
+   double E_sum, Px_sum, Py_sum, Pz_sum;
 
+   //Vertex variable
+   double Ks_px, Ks_py, Ks_pz, norme, Ks_px_norme, Ks_py_norme, Ks_pz_norme;
+   double vz0, vx, vy, vz, Ks_vx, Ks_vy, Ks_vz;
+   double cT_Ks = 2.8;
+
+
+   //Weight 
+   double weight; // weight of phase space
+   double weight_crosssection;
+   double BR_kaons = 0.34;
+   double BR_pions = 0.692;
+   double finalweight;
 
    //Initial quadrivector
    TLorentzVector Target(0.0, 0.0, 0.0, Mp);  
@@ -297,17 +358,88 @@ void Phi_generator() {
 
    //Weight of PhaseSpace
    weight = abs(Q2_max - Q2_min)*abs(xb_max - xb_min)*abs(t_max-t_min);
+   sum_weight_phasespace += weight;
 
-   if (std::isnan(weight)){
-   } else {
-      sum_weight_phasespace += weight;
-   }
+   weight_crosssection = phys.dsigmadt_tot(t, Q2, W, Eb);
+   finalweight = weight*weight_crosssection*BR_pions*BR_kaons;
+
+   //Vertex of e- 
+   std::uniform_real_distribution<double> dist_vz0(-5.5, -0.5);
+   vz0 = dist_vz0(gen);
+   vx=0.;
+   vy=0.;
+   vz=vz0;
+
+   //Vertex of Ks
+
+   Ks_px = Ks.Px();
+   Ks_py = Ks.Py();
+   Ks_pz = Ks.Pz();
+
+   norme = sqrt(Ks_px*Ks_px + Ks_py*Ks_py + Ks_pz*Ks_pz);
+
+   Ks_px_norme = Ks_px/norme;
+   Ks_py_norme = Ks_py/norme;
+   Ks_pz_norme = Ks_pz/norme; 
+
+   Ks_vx = 0 + Ks_px_norme*cT_Ks;
+   Ks_vy = 0 + Ks_py_norme*cT_Ks;
+   Ks_vz = vz0 + Ks_pz_norme*cT_Ks;
+
+   // Fill Lund
+
+   //header
+   files[i] << 4 << setw(15) << 1 << setw(5) << 1 << setw(15) << 0 << setw(15) << 0 << setw(15) << 11 << setw(15) << Eb << setw(15) << 0 << setw(15) << indice_evenement << setw(15) << finalweight << endl;
+  
+   // proton difusé
+   files[i] << 1 << setw(5) << 1 << setw(5) << 1 << setw(7) << 2212 << setw(5) << 0 << setw(5) << 0 << setw(15) << Proton.Px() << setw(15) << Proton.Py() << setw(15) << Proton.Pz();
+   files[i] << setw(15) << Proton.E() << setw(15) << Mp << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
+
+   // electron difusé
+   files[i] << 2 << setw(5) << 1 << setw(5) << 1 << setw(7) << 11 << setw(5) << 0 << setw(5) << 0 << setw(15) << Electron.Px() << setw(15) << Electron.Py() << setw(15) << Electron.Pz();
+   files[i] << setw(15) << Electron.E() << setw(15) << m_electron << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
+
+   // PI+
+   files[i] << 3 << setw(5) << 1 << setw(5) << 1 << setw(7) << 211 << setw(5) << 0 << setw(5) << 0 << setw(15) << Pip.Px() << setw(15) << Pip.Py() << setw(15) << Pip.Pz();
+   files[i] << setw(15) << Pip.E() << setw(15) << m_pions << setw(15) << Ks_vx << setw(15) << Ks_vy << setw(15) << Ks_vz << endl;
+  
+   // PI-
+   files[i] << 4 << setw(5) << 1 << setw(5) << 1 << setw(7) << -211 << setw(5) << 0 << setw(5) << 0 << setw(15) << Pim.Px() << setw(15) << Pim.Py() << setw(15) << Pim.Pz();
+   files[i] << setw(15) << Pim.E() << setw(15) << m_pions << setw(15) << Ks_vx << setw(15) << Ks_vy << setw(15) << Ks_vz << endl;
+
+
+   //Fill histograms
+
+   pvstheta_el->Fill(Electron.Theta()*(180/3.14), Electron.P(), finalweight);
+   pvstheta_pr->Fill(Proton.Theta()*(180/3.14), Proton.P(), finalweight);
+   pvstheta_kl->Fill(Kl.Theta()*(180/3.14), Kl.P(), finalweight);
+   pvstheta_pip->Fill(Pip.Theta()*(180/3.14), Pip.P(), finalweight);
+   pvstheta_pim->Fill(Pim.Theta()*(180/3.14), Pim.P(), finalweight);
+
+   Minv_pip_pim->Fill((Pip + Pim).M(), finalweight);
+   Minv_pip_pim_kl->Fill((Pip + Pim + Kl).M(), finalweight);
+   hist_vz->Fill(vz, finalweight);
+   hist_Ks_vx->Fill(Ks_vx, finalweight);
+   hist_Ks_vy->Fill(Ks_vy, finalweight);
+   hist_Ks_vz->Fill(Ks_vz, finalweight);
+   hist_dist_vevks->Fill(sqrt((Ks_vx - vx)*(Ks_vx - vx) + (Ks_vy - vy)*(Ks_vy - vy) + (Ks_vz - vz)*(Ks_vz - vz)), finalweight);
+   histt->Fill(t, finalweight);
+   hist_Q2->Fill(Q2, finalweight);
+
+   //Verification -- Tests
 
    if (std::isnan(weight)){
       cpt_nan += 1;
    }
 
-   if(i % 2000000 == 0){
+
+   Px_sum = Pip.Px() + Pim.Px() + Kl.Px() + Proton.Px() + Electron.Px();
+   Py_sum = Pip.Py() + Pim.Py() + Kl.Py() + Proton.Py() + Electron.Py();
+   Pz_sum = Pip.Pz() + Pim.Pz() + Kl.Pz() + Proton.Pz() + Electron.Pz();
+
+   E_sum = Pip.E() + Pim.E() + Kl.E() + Proton.E() + Electron.E();
+
+   if(n % 500000 == 0){
 
    cout << "\n--- Résumé evenement---" << endl;
    cout << "s 23 : " << s_23 << endl;
@@ -375,14 +507,79 @@ void Phi_generator() {
    cout << "pi- Pz : " << Pim.Pz() << endl;
    cout << "pi- E : " << Pim.E() << endl;
 
+   cout << "Sum of x final state momentum :  " << Px_sum << endl;
+   cout << "Sum of y final state momentum :  " << Py_sum << endl;
+   cout << "Sum of z final state momentum :  " << Pz_sum << endl;
+
+   cout << "Sum of E final state momentum :  " << E_sum << endl;
+
    cout << "Weight event : " << weight << endl;
    cout << "----------------\n" << endl;
-
    }
 
-   }
+
+
+   } // end of loop in events
+   
+   files[i].close();
+
+   } // end of loop in lund file
+
+   cout << "Ecriture du pdf..." <<endl;
+
+   double echelle_plot_couleur = 10.0;
+
+   pvstheta_el->SetMinimum(0);  // échelle de couleur
+   pvstheta_el->SetMaximum(echelle_plot_couleur);
+
+   pvstheta_pr->SetMinimum(0);  // échelle de couleur
+   pvstheta_pr->SetMaximum(echelle_plot_couleur);
+
+   pvstheta_kl->SetMinimum(0);  // échelle de couleur
+   pvstheta_kl->SetMaximum(echelle_plot_couleur);
+
+   pvstheta_pip->SetMinimum(0);  // échelle de couleur
+   pvstheta_pip->SetMaximum(echelle_plot_couleur);
+
+   pvstheta_pim->SetMinimum(0);  // échelle de couleur
+   pvstheta_pim->SetMaximum(echelle_plot_couleur);
+
+   TString pdfFile = "phi_generator_plots.pdf";
+
+   // Premier canvas (ouvre le PDF)
+   TCanvas *c = new TCanvas("c", "Plots", 800, 600);
+
+   pvstheta_el->Draw("COLZ");
+
+   c->Print(pdfFile + "("); // ouvre le fichier PDF
+
+   pvstheta_pr->Draw("COLZ"); 
+   c->Print(pdfFile);
+
+   pvstheta_kl->Draw("COLZ"); 
+   c->Print(pdfFile);
+
+   pvstheta_pip->Draw("COLZ"); 
+   c->Print(pdfFile);
+
+   pvstheta_pim->Draw("COLZ");
+   c->Print(pdfFile);
+
+   Minv_pip_pim->Draw("HIST"); c->Print(pdfFile);
+   Minv_pip_pim_kl->Draw("HIST"); c->Print(pdfFile);
+   hist_vz->Draw("HIST"); c->Print(pdfFile);
+   hist_Ks_vx->Draw("HIST"); c->Print(pdfFile);
+   hist_Ks_vy->Draw("HIST"); c->Print(pdfFile);
+   hist_Ks_vz->Draw("HIST"); c->Print(pdfFile);
+   hist_dist_vevks->Draw("HIST"); c->Print(pdfFile);
+   histt->Draw("HIST"); c->Print(pdfFile);
+
+   hist_Q2->Draw("HIST");
+   c->Print(pdfFile + ")");
+
+   delete c;
+
    cout << "Somme weight event : " << sum_weight_phasespace << endl;
    cout << "number of nan : " << cpt_nan << endl;
-   
 
-}
+} //end of generator function
