@@ -42,7 +42,7 @@ class Physics {
 
         // simga T (Q2, W). gamma* + p -> phi + p 
         double W_th = 1.957;
-        double Mp = 0.938;
+        double Mp = 0.9395;
         double m_phi = 1.019;
         double alpha_1 = 400;
         double alpha_2 = 1.0;
@@ -68,7 +68,7 @@ class Physics {
 
        double t_min_calcul(double Q2, double W){
 
-        double Mp = 0.938;
+        double Mp = 0.9395;
         double m_phi = 1.019;
 
         double p_cm = pow(Lambda(W*W, Mp*Mp, -Q2), 0.5)/(2*W);
@@ -83,7 +83,7 @@ class Physics {
 
        double t_max_calcul(double Q2, double W){
 
-        double Mp = 0.938;
+        double Mp = 0.9395;
         double m_phi = 1.019;
 
         double p_cm = pow(Lambda(W*W, Mp*Mp, -Q2), 0.5)/(2*W);
@@ -102,7 +102,7 @@ class Physics {
         // Then sum with episolon wich depend of E -> we obtain dsigma tot/dt for this processus gamma* + p -> phi + p : 
 
         double mg = 1.0;
-        double Mp = 0.938;
+        double Mp = 0.9395;
         double m_phi = 1.019;
    
 
@@ -132,7 +132,7 @@ class Physics {
         // it's like : photon flux (QED) * gamma* + p -> phi + p (QCD) wich gives ep->e'p'phi
 
         double alpha = 1/137.036;
-        double Mp = 0.938;
+        double Mp = 0.9395;
         double nu = (W*W - Mp*Mp + Q2)/(2*Mp);
         double y = nu/E;
         double xb = Q2/(2*Mp*nu);
@@ -159,37 +159,48 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    double bin2 = 100;
 
    TH2F *pvstheta_el = new TH2F("pvstheta_el", "p vs theta for electron", bin1, 0, 90, bin1, 0.0, 11);
-   TH2F *pvstheta_pr = new TH2F("pvstheta_pr", "p vs theta for proton", bin1, 0, 90, bin1, 0.0, 11);
-   TH2F *pvstheta_kl = new TH2F("pvstheta_kl", "p vs theta for kl", bin1, 0, 90, bin1, 0.0, 11); 
-   TH2F *pvstheta_ks = new TH2F("pvstheta_ks", "p vs theta for ks", bin1, 0, 90, bin1, 0.0, 11); 
-   TH2F *pvstheta_pip = new TH2F("pvstheta_pip", "p vs theta for pi+", bin1, 0, 90, bin1, 0.0, 11); 
-   TH2F *pvstheta_pim = new TH2F("pvstheta_pim", "p vs theta for pi-", bin1, 0, 90, bin1, 0.0, 11); 
+   TH2F *pvstheta_nucl = new TH2F("pvstheta_nucl", "p vs theta for nucleon", bin1, 0, 90, bin1, 0.0, 11);
+   TH2F *pvstheta_nucl2 = new TH2F("pvstheta_nucl2", "p vs theta for nucleon with large acceptance cuts", bin1, 0, 90, bin1, 0.0, 11);
+   TH2F *pvstheta_kp = new TH2F("pvstheta_kp", "p vs theta for K+", bin1, 0, 90, bin1, 0.0, 11); 
+   TH2F *pvstheta_km = new TH2F("pvstheta_km", "p vs theta for K-", bin1, 0, 90, bin1, 0.0, 11); 
+   //TH2F *pvstheta_pip = new TH2F("pvstheta_pip", "p vs theta for pi+", bin1, 0, 90, bin1, 0.0, 11); 
+   //TH2F *pvstheta_pim = new TH2F("pvstheta_pim", "p vs theta for pi-", bin1, 0, 90, bin1, 0.0, 11); 
+
+   //TH2F *thetavstheta_proton_pim = new TH2F("thetavstheta_proton_pim", "theta pi- vs theta proton", bin1, 0, 90, bin1, 0.0, 120); 
+   //TH2F *thetavstheta_proton_pip = new TH2F("thetavstheta_proton_pip", "theta pi+ vs theta proton", bin1, 0, 90, bin1, 0.0, 120); 
+
+   TH2F *thetavstheta_nucleon_kp = new TH2F("thetavstheta_nucleon_kp", "theta K+ vs theta nucleon", bin1, 0, 90, bin1, 0.0, 120); 
+   TH2F *thetavstheta_nucleon_kp2 = new TH2F("thetavstheta_nucleon_kp2", "theta K+ vs theta nucleon with K+ K- in FD", bin1, 0, 90, bin1, 0.0, 120); 
+   TH2F *thetavstheta_kp_km = new TH2F("thetavstheta_kp_km", "theta K+ vs theta K-", bin1, 0.0, 120, bin1, 0.0, 120); 
+   TH2F *tvstheta_nucleon = new TH2F("tvstheta_nucleon", "t vs theta nucleon", bin1, 0, 90, bin1, -8, 0); 
+
    TH2F *tvsQ2 = new TH2F("tvsQ2", "t vs Q2 with kinematics cuts", 300, -20, 0, 300, 0, 10);
    TH2F *Q2vsW = new TH2F("Q2vsW", "Q2 vs W", 100, 0, 10, 100, 0, 10); 
 
-   TH1F *Minv_pip_pim = new TH1F("Minv_pip_pim", "Invariant mass of pi+ pi-", bin2, 0, 1.0);
-   TH1F *Minv_pip_pim_kl = new TH1F("Minv_pip_pim_kl", "Invariant mass of (pi+ pi- + Kl)", 400, 0.8, 1.2);
+   //TH1F *Minv_pip_pim = new TH1F("Minv_pip_pim", "Invariant mass of pi+ pi-", bin2, 0, 1.0);
+   TH1F *Minv_kp_km = new TH1F("Minv_kp_km", "Invariant mass of (K- K+)", 400, 0.8, 1.2);
    TH1F *hist_vz = new TH1F("hist_vz", "vz of e-", bin2, -6, 1.0);
-   TH1F *hist_Ks_vx = new TH1F("hist_Ks_vx", "vertex x of Ks", bin2, -3, 3.0);
-   TH1F *hist_Ks_vy = new TH1F("hist_Ks_vy", "vertex y of Ks", bin2, -3, 3.0);
-   TH1F *hist_Ks_vz = new TH1F("hist_Ks_vz", "vertex z of Ks", bin2, -4, 4.0);
-   TH1F *hist_dist_vevks = new TH1F("hist_dist_vevks", "distance (x, y, z) between vertex e and vertex Ks", bin2, 2, 4);
+   //TH1F *hist_Km_vx = new TH1F("hist_Km_vx", "vertex x of K-", bin2, -3, 3.0);
+   //TH1F *hist_Km_vy = new TH1F("hist_Km_vy", "vertex y of K-", bin2, -3, 3.0);
+   //TH1F *hist_Km_vz = new TH1F("hist_Km_vz", "vertex z of K-", bin2, -4, 4.0);
+   //TH1F *hist_dist_vevks = new TH1F("hist_dist_vevks", "distance (x, y, z) between vertex e and vertex Ks", bin2, 2, 4);
    TH1F *histt = new TH1F("histt", "t", bin2, -8, 0);
    TH1F *hist_Q2 = new TH1F("hist_Q2", "Q2", bin2, 0, 8);
    TH1F *hist_xb = new TH1F("hist_xb", "xb", bin2, 0, 1);
    TH1F *hist_W = new TH1F("hist_W", "W", bin2, 1.5, 4.5);
    TH1F *hist_p_electron = new TH1F("hist_p_electron", "p electron", bin2, 0, 12);
-   TH1F *hist_p_proton = new TH1F("hist_p_proton", "p proton", bin2, 0, 2);
-   TH1F *hist_p_Ks = new TH1F("hist_p_Ks", "p Ks", bin2, 0, 4.2);
-   TH1F *hist_p_Kl = new TH1F("hist_p_Kl", "p Kl", bin2, 0, 4.2);
+   TH1F *hist_p_nucleon = new TH1F("hist_p_nucleon", "p nucleon", bin2, 0, 2);
+   TH1F *hist_p_Km = new TH1F("hist_p_Km", "momentum K-", bin2, 0, 4.2);
+   TH1F *hist_p_Kp = new TH1F("hist_p_Kp", "momentum K+", bin2, 0, 4.2);
    TH1F *hist_theta_electron = new TH1F("hist_theta_electron", "theta electron", bin2, 0, 1);
-   TH1F *hist_theta_proton = new TH1F("hist_theta_proton", "theta proton", bin2, 0, 2);
-   TH1F *hist_theta_Ks = new TH1F("hist_theta_Ks", "theta Ks", bin2, 0, 3);
-   TH1F *hist_theta_Kl = new TH1F("hist_theta_Kl", "theta Kl", bin2, 0, 3);
+   TH1F *hist_theta_nucleon = new TH1F("hist_theta_nucleon", "theta nucleon", bin2, 0, 2);
+   TH1F *hist_theta_Km = new TH1F("hist_theta_Km", "theta K-", bin2, 0, 3);
+   TH1F *hist_theta_Kp = new TH1F("hist_theta_Kp", "theta K+", bin2, 0, 3);
    TH1F *hist_phi_electron = new TH1F("hist_phi_electron", "phi electron", bin2, -4, 4);
-   TH1F *hist_phi_proton = new TH1F("hist_phi_proton", "phi proton", bin2, -4, 3.18);
-   TH1F *hist_phi_Ks = new TH1F("hist_phi_Ks", "phi Ks", bin2, -4, 4);
-   TH1F *hist_phi_Kl = new TH1F("hist_phi_Kl", "phi Kl", bin2, -4, 4);
+   TH1F *hist_phi_nucleon = new TH1F("hist_phi_nuelcon", "phi nucleon", bin2, -4, 3.18);
+   TH1F *hist_phi_Km = new TH1F("hist_phi_Km", "phi K-", bin2, -4, 4);
+   TH1F *hist_phi_Kp = new TH1F("hist_phi_Kp", "phi K+", bin2, -4, 4);
+
    
    auto setTitles = [](TH1 *h, const char *xtitle, const char *ytitle) {
                h->GetXaxis()->SetTitle(xtitle);
@@ -199,33 +210,42 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    };
 
    setTitles(pvstheta_el, "#theta [degree]", "p [GeV]");
-   setTitles(pvstheta_pr, "#theta [degree]", "p [GeV]");
-   setTitles(pvstheta_kl, "#theta [degree]", "p [GeV]");
-   setTitles(pvstheta_ks, "#theta [degree]", "p [GeV]");
-   setTitles(pvstheta_pip, "#theta [degree]", "p [GeV]");
-   setTitles(pvstheta_pim, "#theta [degree]", "p [GeV]");
+   setTitles(pvstheta_nucl, "#theta [degree]", "p [GeV]");
+   setTitles(pvstheta_nucl2, "#theta [degree]", "p [GeV]");
+   setTitles(pvstheta_kp, "#theta [degree]", "p [GeV]");
+   setTitles(pvstheta_km, "#theta [degree]", "p [GeV]");
+   //setTitles(pvstheta_pip, "#theta [degree]", "p [GeV]");
+   //setTitles(pvstheta_pim, "#theta [degree]", "p [GeV]");
+   //setTitles(thetavstheta_proton_pim, "#theta_{proton} [degree]", "#theta_{#pi^{-}} [degree]");
+   //setTitles(thetavstheta_proton_pip, "#theta_{proton} [degree]", "#theta_{#pi^{+}} [degree]");
+   
+   setTitles(thetavstheta_kp_km, "#theta_{K+} [degree]", "#theta_{K-} [degree]");
+   setTitles(thetavstheta_nucleon_kp, "#theta_{nucleon} [degree]", "#theta_{K^{+}} [degree]");
+   setTitles(thetavstheta_nucleon_kp2, "#theta_{nucleon} [degree]", "#theta_{K^{+}} [degree]");
+   setTitles(tvstheta_nucleon, "#theta_{nucleon} [degree]", "t [GeV^{2}]");
+
    setTitles(tvsQ2, "t [GeV^2]", "Q2 [GeV^2]");
    setTitles(Q2vsW, "Q2 [GeV^2]", "W [GeV^2]");
 
-   Minv_pip_pim->GetXaxis()->SetTitle("Minv pi+ pi- [GeV]");
-   Minv_pip_pim_kl->GetXaxis()->SetTitle("Minv pi+ pi- + kl [GeV]");
+   //Minv_pip_pim->GetXaxis()->SetTitle("Minv pi+ pi- [GeV]");
+   Minv_kp_km->GetXaxis()->SetTitle("Minv (K-K+) [GeV]");
    hist_vz->GetXaxis()->SetTitle("vz e- [cm]");
-   hist_Ks_vx->GetXaxis()->SetTitle("vx Ks [cm]");
-   hist_Ks_vy->GetXaxis()->SetTitle("vy ks [cm]");
-   hist_Ks_vz->GetXaxis()->SetTitle("vz Ks [cm]");
-   hist_dist_vevks->GetXaxis()->SetTitle("distance vertex e- and vertex Ks [cm]");
+   //hist_Ks_vx->GetXaxis()->SetTitle("vx Ks [cm]");
+   //hist_Ks_vy->GetXaxis()->SetTitle("vy ks [cm]");
+   //hist_Ks_vz->GetXaxis()->SetTitle("vz Ks [cm]");
+   //hist_dist_vevks->GetXaxis()->SetTitle("distance vertex e- and vertex Ks [cm]");
    histt->GetXaxis()->SetTitle("t [GeV^2]");
    hist_Q2->GetXaxis()->SetTitle("Q2 [GeV^2]");
    hist_xb->GetXaxis()->SetTitle("xb");
    hist_W->GetXaxis()->SetTitle("W [GeV]");
    hist_p_electron->GetXaxis()->SetTitle("p [GeV]");
-   hist_p_proton->GetXaxis()->SetTitle("p [GeV]");
-   hist_p_Ks->GetXaxis()->SetTitle("p [GeV]");
-   hist_p_Kl->GetXaxis()->SetTitle("p [GeV]");
+   hist_p_nucleon->GetXaxis()->SetTitle("p [GeV]");
+   hist_p_Km->GetXaxis()->SetTitle("p [GeV]");
+   hist_p_Kp->GetXaxis()->SetTitle("p [GeV]");
    hist_theta_electron->GetXaxis()->SetTitle("theta [rad]");
-   hist_theta_proton->GetXaxis()->SetTitle("theta [rad]");
-   hist_theta_Ks->GetXaxis()->SetTitle("theta [rad]");
-   hist_theta_Kl->GetXaxis()->SetTitle("theta [rad]");
+   hist_theta_nucleon->GetXaxis()->SetTitle("theta [rad]");
+   hist_theta_Km->GetXaxis()->SetTitle("theta [rad]");
+   hist_theta_Kp->GetXaxis()->SetTitle("theta [rad]");
    hist_phi_electron->GetXaxis()->SetTitle("theta [rad]");
    hist_phi_electron->GetXaxis()->SetTitle("theta [rad]");
    hist_phi_electron->GetXaxis()->SetTitle("theta [rad]");
@@ -237,6 +257,10 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    //some counter usefule
    double sum_weight_phasespace = 0; //sum of weight associated with the size of phasespace
    double cpt_nan = 0; //counter of NaN 
+   double compteur_neutron_CD = 0;
+   double compteur_neutron_FD = 0;
+   double compteur_weight = 0;
+   double compteur_kpkm_outsideFD = 0;
 
    //LOOP in LUND FILE
    for (int i = 0; i < nb_fichier; ++i) {
@@ -253,33 +277,36 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
 
    //Mass
    double m_electron = 0.00051;
-   double Mp = 0.938;
-   double m_kaons = 0.4937;
+   double Mp = 0.9395;      //mass of nucleon. in this case it's neutron
+   double m_kaons = 0.4937; // mass of K+ K-
    double m_phi = 1.019;
    double m_pions = 0.1395;
 
    //Kinamitics varibale
    double Q2_min = 1;
    double Q2_max = 6.5;
-   double Eb = 10.6;
+   double Eb = 10.4;
 
    double s_23 = m_electron*m_electron + 2*Mp*Eb + Mp*Mp; // The mandelstam variable s for the process 2->3 (ep->e'p'phi) 
 
    double Q2, W, W2, W2_min, W2_max, nu, nu_min, nu_max, xb, xb_min, xb_max, theta_electron, phi_electron, E_electron, 
-   t, t_min, t_min2, t_max2, t_max, E_proton, s_22, u_22, theta_proton_gamma, phi_proton_gamma, theta_ks, phi_ks, theta_pi, phi_pi;
+   t, t_min, t_min2, t_max2, t_max, E_nucleon, s_22, u_22, theta_nucleon_gamma, phi_nucleon_gamma, theta_km, phi_km;
+   
+   //double theta_pi, phi_pi;
 
    double E_sum, Px_sum, Py_sum, Pz_sum; // useful variable to verify the conservation of energy and momemtum at the end
 
    //Vertex variable
-   double Ks_px, Ks_py, Ks_pz, norme, Ks_px_norme, Ks_py_norme, Ks_pz_norme;
-   double vz0, vx, vy, vz, Ks_vx, Ks_vy, Ks_vz;
-   double cT_Ks = 2.8;
+   //double Ks_px, Ks_py, Ks_pz, norme, Ks_px_norme, Ks_py_norme, Ks_pz_norme;
+   double vz0, vx, vy, vz;
+   //double Ks_vx, Ks_vy, Ks_vz;
+   //double cT_Ks = 2.8;
 
 
    //Weight 
    double weight; // weight of phase space
    double weight_crosssection; // weight of cross section
-   double BR_kaons = 0.34; //branching ratio
+   double BR_kaons = 0.49; //branching ratio
    double BR_pions = 0.692; // branching ratio
    double finalweight; 
 
@@ -287,7 +314,7 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    TLorentzVector Target(0.0, 0.0, 0.0, Mp);  
    TLorentzVector Beam(0.0, 0.0, Eb, sqrt(Eb*Eb + m_electron*m_electron));
 
-   TLorentzVector Proton, Electron, q, Phi;
+   TLorentzVector Nucleon, Electron, q, Phi;
 
    // random generator
    std::random_device rd;
@@ -338,79 +365,79 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    t_min2 = -Q2 + m_phi*m_phi - (1/(2*W*W))*((W*W - Q2 - Mp*Mp)*(W*W + m_phi*m_phi - Mp*Mp) + sqrt(phys.Lambda(W*W, -Q2, Mp*Mp))*sqrt(phys.Lambda(W*W, m_phi*m_phi, Mp*Mp)));
    t_max2 = -Q2 + m_phi*m_phi - (1/(2*W*W))*((W*W - Q2 - Mp*Mp)*(W*W + m_phi*m_phi - Mp*Mp) - sqrt(phys.Lambda(W*W, -Q2, Mp*Mp))*sqrt(phys.Lambda(W*W, m_phi*m_phi, Mp*Mp)));
 
-   std::uniform_real_distribution<double> dist_t_proton(t_min, t_max);
-   t = dist_t_proton(gen); // Mandelstan variable t = (p - p')^2 wich is the same for the 2->2 process (q + p -> phi + p') the 2->3 process (ep->e'p'phi)
-   E_proton = (-t + 2*Mp*Mp)/(2*Mp);
+   std::uniform_real_distribution<double> dist_t_nucleon(t_min, t_max);
+   t = dist_t_nucleon(gen); // Mandelstan variable t = (p - p')^2 wich is the same for the 2->2 process (q + p -> phi + p') the 2->3 process (ep->e'p'phi)
+   E_nucleon = (-t + 2*Mp*Mp)/(2*Mp);
    s_22 = -Q2 + Mp*Mp + 2*q.E()*Mp; // Mandelstan variable s for the 2->2 process (q + p -> phi + p')
    u_22 = -Q2 + 2*Mp*Mp + m_phi*m_phi - t - s_22; // Mandelstan u variable for the 2->2 process (q + p -> phi + p'). we use u + t + s = sum(mass^2)
 
 
    //find the ref for the next formula in Byckling, E., and Kajantie, K. (1973b). Particle kinematics. Wiley-Interscience. (chapter 2->2 scattering)
-   theta_proton_gamma = TMath::ACos(((s_22 + Q2 - Mp*Mp)*(Mp*Mp + Mp*Mp - t) + 2*Mp*Mp*(u_22 + Q2 - Mp*Mp))/(sqrt(phys.Lambda(s_22, -Q2, Mp*Mp))*sqrt(phys.Lambda(t, Mp*Mp, Mp*Mp))));
+   theta_nucleon_gamma = TMath::ACos(((s_22 + Q2 - Mp*Mp)*(Mp*Mp + Mp*Mp - t) + 2*Mp*Mp*(u_22 + Q2 - Mp*Mp))/(sqrt(phys.Lambda(s_22, -Q2, Mp*Mp))*sqrt(phys.Lambda(t, Mp*Mp, Mp*Mp))));
 
    //axis relative to the photon
    TVector3 ez = q.Vect().Unit();               
    TVector3 ex = ez.Orthogonal().Unit();        
    TVector3 ey = ez.Cross(ex).Unit();  
 
-   std::uniform_real_distribution<double> dist_phi_proton_gamma(0, 2*TMath::Pi());
+   std::uniform_real_distribution<double> dist_phi_nucleon_gamma(0, 2*TMath::Pi());
 
-   phi_proton_gamma = dist_phi_proton_gamma(gen); // phi relative to the photon axis 
+   phi_nucleon_gamma = dist_phi_nucleon_gamma(gen); // phi relative to the photon axis 
 
    //calculate the direction of the proton vector with theta and phi 
    //important to use the axis relative to the photon 
-   TVector3 proton_vect =
-    ex * (sin(theta_proton_gamma)*cos(phi_proton_gamma)) +
-    ey * (sin(theta_proton_gamma)*sin(phi_proton_gamma)) +
-    ez * cos(theta_proton_gamma);
+   TVector3 nucleon_vect =
+    ex * (sin(theta_nucleon_gamma)*cos(phi_nucleon_gamma)) +
+    ey * (sin(theta_nucleon_gamma)*sin(phi_nucleon_gamma)) +
+    ez * cos(theta_nucleon_gamma);
 
-   proton_vect *= sqrt(E_proton*E_proton - Mp*Mp); //norme of momemtum
+   nucleon_vect *= sqrt(E_nucleon*E_nucleon - Mp*Mp); //norme of momemtum
 
-   Proton.SetVectM(proton_vect, Mp); // defintion of the quadri-vector
+   Nucleon.SetVectM(nucleon_vect, Mp); // defintion of the quadri-vector
 
    //Kinematics of Phi meson
-   Phi = Target + q - Proton;
+   Phi = Target + q - Nucleon;
 
    //Kinematics of Ks and Kl;
-   std::uniform_real_distribution<double> dist_costheta_ks(-1, 1); // important to generate cos(theta) instead of theta beacause d(solide_angle) = sin(theta)dtheta * dphi
-   std::uniform_real_distribution<double> dist_phi_ks(0, 2*TMath::Pi());
+   std::uniform_real_distribution<double> dist_costheta_km(-1, 1); // important to generate cos(theta) instead of theta beacause d(solide_angle) = sin(theta)dtheta * dphi
+   std::uniform_real_distribution<double> dist_phi_km(0, 2*TMath::Pi());
 
-   theta_ks = TMath::ACos(dist_costheta_ks(gen));
-   phi_ks = dist_phi_ks(gen);
+   theta_km = TMath::ACos(dist_costheta_km(gen));
+   phi_km = dist_phi_km(gen);
 
-   TVector3 pKs_CMS;
-      pKs_CMS.SetMagThetaPhi(sqrt((m_phi/2)*(m_phi/2) - m_kaons*m_kaons), theta_ks, phi_ks);
+   TVector3 pKm_CMS;
+      pKm_CMS.SetMagThetaPhi(sqrt((m_phi/2)*(m_phi/2) - m_kaons*m_kaons), theta_km, phi_km);
 
-   TLorentzVector Ks(pKs_CMS, m_phi/2);
-   TLorentzVector Kl(-pKs_CMS, m_phi/2);
+   TLorentzVector Km(pKm_CMS, m_phi/2);
+   TLorentzVector Kp(-pKm_CMS, m_phi/2);
 
    TVector3 boost_lab = Phi.BoostVector();
-   Ks.Boost(boost_lab);
-   Kl.Boost(boost_lab);
+   Km.Boost(boost_lab);
+   Kp.Boost(boost_lab);
 
    //Kinematics of pi+ and pi-;
-   std::uniform_real_distribution<double> dist_costheta_pi(-1, 1);
-   std::uniform_real_distribution<double> dist_phi_pi(0, 2*TMath::Pi());
+   //std::uniform_real_distribution<double> dist_costheta_pi(-1, 1);
+   //std::uniform_real_distribution<double> dist_phi_pi(0, 2*TMath::Pi());
 
-   theta_pi = TMath::ACos(dist_costheta_pi(gen));
-   phi_pi = dist_phi_pi(gen);
+   //theta_pi = TMath::ACos(dist_costheta_pi(gen));
+   //phi_pi = dist_phi_pi(gen);
 
-   TVector3 pPi_CMS;
-      pPi_CMS.SetMagThetaPhi(sqrt((m_kaons/2)*(m_kaons/2) - m_pions*m_pions), theta_pi, phi_pi);
+   //TVector3 pPi_CMS;
+     // pPi_CMS.SetMagThetaPhi(sqrt((m_kaons/2)*(m_kaons/2) - m_pions*m_pions), theta_pi, phi_pi);
 
-   TLorentzVector Pip(pPi_CMS, m_kaons/2);
-   TLorentzVector Pim(-pPi_CMS, m_kaons/2);
+   //TLorentzVector Pip(pPi_CMS, m_kaons/2);
+   //TLorentzVector Pim(-pPi_CMS, m_kaons/2);
 
-   TVector3 boost_lab2 = Ks.BoostVector();
-   Pip.Boost(boost_lab2);
-   Pim.Boost(boost_lab2);
+   //TVector3 boost_lab2 = Ks.BoostVector();
+   //Pip.Boost(boost_lab2);
+   //Pim.Boost(boost_lab2);
 
    //Weight of PhaseSpace
    weight = abs(Q2_max - Q2_min)*abs(xb_max - xb_min)*abs(t_max-t_min);
    sum_weight_phasespace += weight;
 
    weight_crosssection = phys.dsigmadt_tot(t, Q2, W, Eb);
-   finalweight = weight*weight_crosssection*BR_pions*BR_kaons;
+   finalweight = weight*weight_crosssection*BR_kaons;
 
    //Vertex of e- 
    std::uniform_real_distribution<double> dist_vz0(-5.5, -0.5);
@@ -421,55 +448,65 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
 
    //Vertex of Ks
 
-   Ks_px = Ks.Px();
-   Ks_py = Ks.Py();
-   Ks_pz = Ks.Pz();
+   //Ks_px = Ks.Px();
+   //Ks_py = Ks.Py();
+   //Ks_pz = Ks.Pz();
 
-   norme = sqrt(Ks_px*Ks_px + Ks_py*Ks_py + Ks_pz*Ks_pz); //magnitude of the momentum of the Ks
+   //norme = sqrt(Ks_px*Ks_px + Ks_py*Ks_py + Ks_pz*Ks_pz); //magnitude of the momentum of the Ks
 
    //normalisation of Ks vector (just to have the direction of emission)
-   Ks_px_norme = Ks_px/norme; 
-   Ks_py_norme = Ks_py/norme;
-   Ks_pz_norme = Ks_pz/norme; 
+   //Ks_px_norme = Ks_px/norme; 
+   //Ks_py_norme = Ks_py/norme;
+   //Ks_pz_norme = Ks_pz/norme; 
 
    //shifted the vertex in the direction calculate previously * 2.8 cm
    // Ks_vx, Ks_vy and Ks_vz are usefule to set the vertex of pi+ and pi- in Lund file
-   Ks_vx = 0 + Ks_px_norme*cT_Ks;
-   Ks_vy = 0 + Ks_py_norme*cT_Ks;
-   Ks_vz = vz0 + Ks_pz_norme*cT_Ks;
+   //Ks_vx = 0 + Ks_px_norme*cT_Ks;
+   //Ks_vy = 0 + Ks_py_norme*cT_Ks;
+   //Ks_vz = vz0 + Ks_pz_norme*cT_Ks;
 
    // Fill Lund 
 
    //header
    files[i] << 4 << setw(15) << 1 << setw(5) << 1 << setw(15) << 0 << setw(15) << 0 << setw(15) << 11 << setw(15) << Eb << setw(15) << 0 << setw(15) << indice_evenement << setw(15) << finalweight << endl;
   
-   // proton scattering
-   files[i] << 1 << setw(5) << 1 << setw(5) << 1 << setw(7) << 2212 << setw(5) << 0 << setw(5) << 0 << setw(15) << Proton.Px() << setw(15) << Proton.Py() << setw(15) << Proton.Pz();
-   files[i] << setw(15) << Proton.E() << setw(15) << Mp << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
+   // Nucleon scattering
+   files[i] << 1 << setw(5) << 1 << setw(5) << 1 << setw(7) << 2112 << setw(5) << 0 << setw(5) << 0 << setw(15) << Nucleon.Px() << setw(15) << Nucleon.Py() << setw(15) << Nucleon.Pz();
+   files[i] << setw(15) << Nucleon.E() << setw(15) << Mp << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
 
    // electron scattering
    files[i] << 2 << setw(5) << 1 << setw(5) << 1 << setw(7) << 11 << setw(5) << 0 << setw(5) << 0 << setw(15) << Electron.Px() << setw(15) << Electron.Py() << setw(15) << Electron.Pz();
    files[i] << setw(15) << Electron.E() << setw(15) << m_electron << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
 
-   // PI+
-   files[i] << 3 << setw(5) << 1 << setw(5) << 1 << setw(7) << 211 << setw(5) << 0 << setw(5) << 0 << setw(15) << Pip.Px() << setw(15) << Pip.Py() << setw(15) << Pip.Pz();
-   files[i] << setw(15) << Pip.E() << setw(15) << m_pions << setw(15) << Ks_vx << setw(15) << Ks_vy << setw(15) << Ks_vz << endl;
+   // K-
+   files[i] << 3 << setw(5) << 1 << setw(5) << 1 << setw(7) << 321 << setw(5) << 0 << setw(5) << 0 << setw(15) << Km.Px() << setw(15) << Km.Py() << setw(15) << Km.Pz();
+   files[i] << setw(15) << Km.E() << setw(15) << m_kaons << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
   
-   // PI-
-   files[i] << 4 << setw(5) << 1 << setw(5) << 1 << setw(7) << -211 << setw(5) << 0 << setw(5) << 0 << setw(15) << Pim.Px() << setw(15) << Pim.Py() << setw(15) << Pim.Pz();
-   files[i] << setw(15) << Pim.E() << setw(15) << m_pions << setw(15) << Ks_vx << setw(15) << Ks_vy << setw(15) << Ks_vz << endl;
+   // K+
+   files[i] << 4 << setw(5) << 1 << setw(5) << 1 << setw(7) << -321 << setw(5) << 0 << setw(5) << 0 << setw(15) << Kp.Px() << setw(15) << Kp.Py() << setw(15) << Kp.Pz();
+   files[i] << setw(15) << Kp.E() << setw(15) << m_kaons << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
 
+
+   compteur_weight += finalweight;
 
    //Fill histograms
 
    pvstheta_el->Fill(Electron.Theta()*(180/3.14), Electron.P(), finalweight);
-   pvstheta_pr->Fill(Proton.Theta()*(180/3.14), Proton.P(), finalweight);
-   pvstheta_kl->Fill(Kl.Theta()*(180/3.14), Kl.P(), finalweight);
-   pvstheta_ks->Fill(Ks.Theta()*(180/3.14), Ks.P(), finalweight);
-   pvstheta_pip->Fill(Pip.Theta()*(180/3.14), Pip.P(), finalweight);
-   pvstheta_pim->Fill(Pim.Theta()*(180/3.14), Pim.P(), finalweight);
+   pvstheta_nucl->Fill(Nucleon.Theta()*(180/3.14), Nucleon.P(), finalweight);
+   pvstheta_kp->Fill(Kp.Theta()*(180/3.14), Kp.P(), finalweight);
+   pvstheta_km->Fill(Km.Theta()*(180/3.14), Km.P(), finalweight);
+   //pvstheta_pip->Fill(Pip.Theta()*(180/3.14), Pip.P(), finalweight);
+   //pvstheta_pim->Fill(Pim.Theta()*(180/3.14), Pim.P(), finalweight);
+   //thetavstheta_proton_pim->Fill(Proton.Theta()*(180/3.14), Pim.Theta()*(180/3.14), finalweight);
+   //thetavstheta_proton_pip->Fill(Proton.Theta()*(180/3.14), Pip.Theta()*(180/3.14), finalweight);
 
-   if (Electron.P() > 5.25 && Electron.P() < 8 && Proton.P() > 0.45){ //same cut than Bhawani plot 
+   if(Electron.Theta()*(180/3.14) > 5 && Electron.Theta()*(180/3.14) < 35 && Kp.Theta()*(180/3.14) > 5 && Kp.Theta()*(180/3.14) < 35 && Km.Theta()*(180/3.14) > 10 && Km.Theta()*(180/3.14) < 35 && Nucleon.P()>0.2 && Electron.P()>2){
+
+      pvstheta_nucl2->Fill(Nucleon.Theta()*(180/3.14), Nucleon.P(), finalweight);
+
+   }
+
+   if (Electron.P() > 5.25 && Electron.P() < 8 && Nucleon.P() > 0.45){ //same cut than Bhawani plot 
 
       tvsQ2->Fill(t, Q2, finalweight);
       Q2vsW->Fill(Q2, W, finalweight);
@@ -479,29 +516,61 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
       hist_W->Fill(W, finalweight);
 
       hist_p_electron->Fill(Electron.P(), finalweight);
-      hist_p_proton->Fill(Proton.P(), finalweight);
-      hist_p_Ks->Fill(Ks.P(), finalweight);
-      hist_p_Kl->Fill(Kl.P(), finalweight);
+      hist_p_nucleon->Fill(Nucleon.P(), finalweight);
+      hist_p_Km->Fill(Km.P(), finalweight);
+      hist_p_Kp->Fill(Kp.P(), finalweight);
 
       hist_theta_electron->Fill(Electron.Theta(), finalweight);
-      hist_theta_proton->Fill(Proton.Theta(), finalweight);
-      hist_theta_Ks->Fill(Ks.Theta(), finalweight);
-      hist_theta_Kl->Fill(Kl.Theta(), finalweight);
+
+      hist_theta_nucleon->Fill(Nucleon.Theta(), finalweight);
+
+      hist_theta_Km->Fill(Km.Theta(), finalweight);
+      hist_theta_Kp->Fill(Kp.Theta(), finalweight);
 
       hist_phi_electron->Fill(Electron.Phi(), finalweight);
-      hist_phi_proton->Fill(Proton.Phi(), finalweight);
-      hist_phi_Ks->Fill(Ks.Phi(), finalweight);
-      hist_phi_Kl->Fill(Kl.Phi(), finalweight);
+      hist_phi_nucleon->Fill(Nucleon.Phi(), finalweight);
+      hist_phi_Km->Fill(Km.Phi(), finalweight);
+      hist_phi_Kp->Fill(Kp.Phi(), finalweight);
 
    }
 
-   Minv_pip_pim->Fill((Pip + Pim).M(), finalweight);
-   Minv_pip_pim_kl->Fill((Pip + Pim + Kl).M(), finalweight);
+   //Minv_pip_pim->Fill((Pip + Pim).M(), finalweight);
+   Minv_kp_km->Fill((Km + Kp).M(), finalweight);
    hist_vz->Fill(vz, finalweight);
-   hist_Ks_vx->Fill(Ks_vx, finalweight);
-   hist_Ks_vy->Fill(Ks_vy, finalweight);
-   hist_Ks_vz->Fill(Ks_vz, finalweight);
-   hist_dist_vevks->Fill(sqrt((Ks_vx - vx)*(Ks_vx - vx) + (Ks_vy - vy)*(Ks_vy - vy) + (Ks_vz - vz)*(Ks_vz - vz)), finalweight);
+   //hist_Ks_vx->Fill(Ks_vx, finalweight);
+   //hist_Ks_vy->Fill(Ks_vy, finalweight);
+   //hist_Ks_vz->Fill(Ks_vz, finalweight);
+   //hist_dist_vevks->Fill(sqrt((Ks_vx - vx)*(Ks_vx - vx) + (Ks_vy - vy)*(Ks_vy - vy) + (Ks_vz - vz)*(Ks_vz - vz)), finalweight);
+
+
+   thetavstheta_nucleon_kp->Fill(Nucleon.Theta()*(180/3.14), Kp.Theta()*(180/3.14), finalweight); // distrib total K+ vs p
+
+   tvstheta_nucleon->Fill(Nucleon.Theta()*(180/3.14), t, finalweight);
+
+   thetavstheta_kp_km->Fill(Km.Theta()*(180/3.14), Kp.Theta()*(180/3.14), finalweight);
+
+   if(Km.Theta()*(180/3.14) < 35 && Km.Theta()*(180/3.14) > 5 && Kp.Theta()*(180/3.14) < 35 && Kp.Theta()*(180/3.14) > 5){//conditon K+ K- dans le FD
+
+      thetavstheta_nucleon_kp2->Fill(Nucleon.Theta()*(180/3.14), Km.Theta()*(180/3.14), finalweight); //distrib neutron dans le cas K+ K- dans le FD
+
+      if(Nucleon.Theta()*(180/3.14) > 5 && Nucleon.Theta()*(180/3.14) < 35){ // neutron dans le FD
+
+         compteur_neutron_FD += finalweight;
+
+      }
+
+      if(Nucleon.Theta()*(180/3.14) > 35 && Nucleon.Theta()*(180/3.14) < 135){ // neutron dans le CD
+
+         compteur_neutron_CD += finalweight;
+
+      }
+
+   }
+
+   if(Km.Theta()*(180/3.14) > 35 || Km.Theta()*(180/3.14) < 5 || Kp.Theta()*(180/3.14) > 35 || Kp.Theta()*(180/3.14) < 5){
+
+      compteur_kpkm_outsideFD += finalweight;
+   }
 
 
    //Verification -- Tests
@@ -513,13 +582,15 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
       cpt_nan += 1;
    }
 
+
+
    //momentum conservation test 
-   Px_sum = Pip.Px() + Pim.Px() + Kl.Px() + Proton.Px() + Electron.Px();
-   Py_sum = Pip.Py() + Pim.Py() + Kl.Py() + Proton.Py() + Electron.Py();
-   Pz_sum = Pip.Pz() + Pim.Pz() + Kl.Pz() + Proton.Pz() + Electron.Pz();
+   Px_sum = Km.Px() + Kp.Px() + Nucleon.Px() + Electron.Px();
+   Py_sum = Km.Py() + Kp.Py() + Nucleon.Py() + Electron.Py();
+   Pz_sum = Km.Pz() + Kp.Pz() + Nucleon.Pz() + Electron.Pz();
 
    //energy conservation test
-   E_sum = Pip.E() + Pim.E() + Kl.E() + Proton.E() + Electron.E();
+   E_sum = Km.E() + Kp.E() + Nucleon.E() + Electron.E();
 
    if(n % 500000 == 0){
 
@@ -550,14 +621,14 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    cout << "t_min2 : " << t_min2 << endl;
    cout << "t_max2 : " << t_max2 << endl;
    cout << "t : " << t << endl;
-   cout << "E_proton : " << E_proton << endl;
-   cout << "Theta Proton -- Virtual photon : " << theta_proton_gamma << endl;
+   cout << "E_nucleon : " << E_nucleon << endl;
+   cout << "Theta Nucleon -- Virtual photon : " << theta_nucleon_gamma << endl;
 
-   cout << "Scatering Proton : " << endl;
-   cout << "Proton Px : " << Proton.Px() << endl;
-   cout << "Proton Py : " << Proton.Py() << endl;
-   cout << "Proton Pz : " << Proton.Pz() << endl;
-   cout << "Proton E : " << Proton.E() << endl;
+   cout << "Scatering Nucleon : " << endl;
+   cout << "Nucleon Px : " << Nucleon.Px() << endl;
+   cout << "Nucleon Py : " << Nucleon.Py() << endl;
+   cout << "Nucleon Pz : " << Nucleon.Pz() << endl;
+   cout << "Nucleon E : " << Nucleon.E() << endl;
 
    cout << "Phi : " << endl;
    cout << "Phi Px : " << Phi.Px() << endl;
@@ -565,29 +636,29 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    cout << "Phi Pz : " << Phi.Pz() << endl;
    cout << "Phi E : " << Phi.E() << endl;
 
-   cout << "Ks : " << endl;
-   cout << "Ks Px : " << Ks.Px() << endl;
-   cout << "Ks Py : " << Ks.Py() << endl;
-   cout << "Ks Pz : " << Ks.Pz() << endl;
-   cout << "Ks E : " << Ks.E() << endl;
+   cout << "Km : " << endl;
+   cout << "Km Px : " << Km.Px() << endl;
+   cout << "Km Py : " << Km.Py() << endl;
+   cout << "Km Pz : " << Km.Pz() << endl;
+   cout << "Km E : " << Km.E() << endl;
 
-   cout << "Kl : " << endl;
-   cout << "Kl Px : " << Kl.Px() << endl;
-   cout << "Kl Py : " << Kl.Py() << endl;
-   cout << "Kl Pz : " << Kl.Pz() << endl;
-   cout << "Kl E : " << Kl.E() << endl;
+   cout << "Kp : " << endl;
+   cout << "Kp Px : " << Kp.Px() << endl;
+   cout << "Kp Py : " << Kp.Py() << endl;
+   cout << "Kp Pz : " << Kp.Pz() << endl;
+   cout << "Kp E : " << Kp.E() << endl;
 
-   cout << "pi+ : " << endl;
-   cout << "pi+ Px : " << Pip.Px() << endl;
-   cout << "pi+ Py : " << Pip.Py() << endl;
-   cout << "pi+ Pz : " << Pip.Pz() << endl;
-   cout << "pi+ E : " << Pip.E() << endl;
+   //cout << "pi+ : " << endl;
+   //cout << "pi+ Px : " << Pip.Px() << endl;
+   //cout << "pi+ Py : " << Pip.Py() << endl;
+   //cout << "pi+ Pz : " << Pip.Pz() << endl;
+   //cout << "pi+ E : " << Pip.E() << endl;
 
-   cout << "pi- : " << endl;
-   cout << "pi- Px : " << Pim.Px() << endl;
-   cout << "pi- Py : " << Pim.Py() << endl;
-   cout << "pi- Pz : " << Pim.Pz() << endl;
-   cout << "pi- E : " << Pim.E() << endl;
+   //cout << "pi- : " << endl;
+   //cout << "pi- Px : " << Pim.Px() << endl;
+   //cout << "pi- Py : " << Pim.Py() << endl;
+   //cout << "pi- Pz : " << Pim.Pz() << endl;
+   //cout << "pi- E : " << Pim.E() << endl;
 
    // Px_sum and Py_sum expected to 0.0 beceause there no momentum in x or y initialy
    cout << "Sum of x final state momentum :  " << Px_sum << endl;
@@ -614,36 +685,45 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    TCanvas *c = new TCanvas("c", "Plots", 800, 600);
 
    pvstheta_el->Draw("COLZ"); c->Print(pdfFile + "("); 
-   pvstheta_pr->Draw("COLZ"); c->Print(pdfFile);
-   pvstheta_kl->Draw("COLZ"); c->Print(pdfFile);
-   pvstheta_ks->Draw("COLZ"); c->Print(pdfFile);
-   pvstheta_pip->Draw("COLZ"); c->Print(pdfFile);
-   pvstheta_pim->Draw("COLZ"); c->Print(pdfFile);
-   Minv_pip_pim->Draw("HIST"); c->Print(pdfFile);
-   Minv_pip_pim_kl->Draw("HIST"); c->Print(pdfFile);
+   pvstheta_nucl->Draw("COLZ"); c->Print(pdfFile);
+   pvstheta_nucl2->Draw("COLZ"); c->Print(pdfFile);
+   pvstheta_kp->Draw("COLZ"); c->Print(pdfFile);
+   pvstheta_km->Draw("COLZ"); c->Print(pdfFile);
+   //pvstheta_pip->Draw("COLZ"); c->Print(pdfFile);
+   //pvstheta_pim->Draw("COLZ"); c->Print(pdfFile);
+   //Minv_pip_pim->Draw("HIST"); c->Print(pdfFile);
+   Minv_kp_km->Draw("HIST"); c->Print(pdfFile);
    hist_vz->Draw("HIST"); c->Print(pdfFile);
-   hist_Ks_vx->Draw("HIST"); c->Print(pdfFile);
-   hist_Ks_vy->Draw("HIST"); c->Print(pdfFile);
-   hist_Ks_vz->Draw("HIST"); c->Print(pdfFile);
-   hist_dist_vevks->Draw("HIST"); c->Print(pdfFile);
+   //hist_Ks_vx->Draw("HIST"); c->Print(pdfFile);
+   //hist_Ks_vy->Draw("HIST"); c->Print(pdfFile);
+   //hist_Ks_vz->Draw("HIST"); c->Print(pdfFile);
+   //hist_dist_vevks->Draw("HIST"); c->Print(pdfFile);
    hist_p_electron->Draw("HIST"); c->Print(pdfFile);
-   hist_p_proton->Draw("HIST"); c->Print(pdfFile);
-   hist_p_Ks->Draw("HIST"); c->Print(pdfFile);
-   hist_p_Kl->Draw("HIST"); c->Print(pdfFile);
+   hist_p_nucleon->Draw("HIST"); c->Print(pdfFile);
+   hist_p_Km->Draw("HIST"); c->Print(pdfFile);
+   hist_p_Kp->Draw("HIST"); c->Print(pdfFile);
    hist_theta_electron->Draw("HIST"); c->Print(pdfFile);
-   hist_theta_proton->Draw("HIST"); c->Print(pdfFile);
-   hist_theta_Ks->Draw("HIST"); c->Print(pdfFile);
-   hist_theta_Kl->Draw("HIST"); c->Print(pdfFile);
+   hist_theta_nucleon->Draw("HIST"); c->Print(pdfFile);
+   hist_theta_Km->Draw("HIST"); c->Print(pdfFile);
+   hist_theta_Kp->Draw("HIST"); c->Print(pdfFile);
    hist_phi_electron->Draw("HIST"); c->Print(pdfFile);
-   hist_phi_proton->Draw("HIST"); c->Print(pdfFile);
-   hist_phi_Ks->Draw("HIST"); c->Print(pdfFile);
-   hist_phi_Kl->Draw("HIST"); c->Print(pdfFile);
+   hist_phi_nucleon->Draw("HIST"); c->Print(pdfFile);
+   hist_phi_Km->Draw("HIST"); c->Print(pdfFile);
+   hist_phi_Kp->Draw("HIST"); c->Print(pdfFile);
    hist_Q2->Draw("HIST"); c->Print(pdfFile);
    hist_xb->Draw("HIST"); c->Print(pdfFile);
    histt->Draw("HIST"); c->Print(pdfFile);
    hist_W->Draw("HIST"); c->Print(pdfFile);
    Q2vsW->Draw("HIST"); c->Print(pdfFile);
-   tvsQ2->Draw("COLZ");
+   tvsQ2->Draw("COLZ"); c->Print(pdfFile);
+   //thetavstheta_proton_pim->Draw("COLZ"); c->Print(pdfFile);
+   //thetavstheta_proton_pip->Draw("COLZ"); c->Print(pdfFile);
+
+   thetavstheta_nucleon_kp->Draw("COLZ"); c->Print(pdfFile);
+   thetavstheta_nucleon_kp2->Draw("COLZ"); c->Print(pdfFile);
+   tvstheta_nucleon->Draw("COLZ"); c->Print(pdfFile);
+   thetavstheta_kp_km->Draw("COLZ");
+
 
    c->Print(pdfFile + ")");
 
@@ -652,4 +732,13 @@ void Phi_generator(double nb_fichier, double nb_event) { // arg1 : number of lun
    //cout << "Sum phasespace weight : " << sum_weight_phasespace << endl;
    cout << "number of nan : " << cpt_nan << endl;
 
-} //end of generator function
+   cout << "sum of weight : " << compteur_weight << endl;
+
+   //cout << "percent of event with K+ K- outside the FD : " << compteur_kpkm_outsideFD/compteur_weight << " percent" << endl;
+
+   //cout << "percent of event with neutron in FD with condition K+ K- in FD : " << compteur_neutron_FD/compteur_weight << " percent" << endl;
+
+   //cout << "percent of event with neutron in CD with condition K+ K- in FD : " << compteur_neutron_CD/compteur_weight << " percent"<< endl;
+
+} //end of generator function 
+
