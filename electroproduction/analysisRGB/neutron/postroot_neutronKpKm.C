@@ -243,9 +243,10 @@ int postroot_neutronKpKm()
 
     std::vector<Plot2D> plots2 = {
 
-    { "t_vs_Q2_data", "t vs Q^{2}" , "t [GeV^{2}]" , "Q^{2} [GeV^{2}]" , "t" , "Q2" ,       60, -8.0, 0.0,     60, 0.0, 10.0, "",   false },
-    { "t_vs_Q2_MC", "t vs Q^{2}" , "t [GeV^{2}]" , "Q^{2} [GeV^{2}]" , "t" , "Q2" ,       60, -8.0, 0.0,     60, 0.0, 10.0, "",   true },
-    { "Q2_vs_xbj_data", "Q^{2} vs x_{bj}" , "x_{bj}" , "Q^{2} [GeV^{2}]" , "Q2/(2*0.939*(10.4-Electron.E()))" , "Q2" ,       60, 0.0, 1.0,     60, 0.0, 10.0, "Status_n >= 2000 && Status_n <= 2999 && Status_Kp >= 2000 && Status_Kp <= 2999 && Status_Km >= 2000 && Status_Km <= 2999",   false },
+    { "t_vs_Q2_data", "t with missing vs Q^{2}" , "t [GeV^{2}]" , "Q^{2} [GeV^{2}]" , "t_missing_nucleon" , "Q2" ,       60, -8.0, 0.0,     60, 0.0, 10.0, "",   false },
+    { "t_vs_Q2_MC", "t with missisng vs Q^{2}" , "t [GeV^{2}]" , "Q^{2} [GeV^{2}]" , "t_missing_nucleon" , "Q2" ,       60, -8.0, 0.0,     60, 0.0, 10.0, "",   true },
+    { "Q2_vs_xbj_mc", "Q^{2} vs x_{bj}" , "x_{bj}" , "Q^{2} [GeV^{2}]" , "Q2/(2*0.939*(10.4-Electron.E()))" , "Q2" ,       60, 0.0, 1.0,     60, 0.0, 10.0, "Status_n >= 2000 && Status_n <= 2999 && Status_Kp >= 2000 && Status_Kp <= 2999 && Status_Km >= 2000 && Status_Km <= 2999 && " + MM_cut + " && MinvKpKm > 0.95 && MinvKpKm < 1.2" ,   true },
+    { "Q2_vs_xbj_data", "Q^{2} vs x_{bj}" , "x_{bj}" , "Q^{2} [GeV^{2}]" , "Q2/(2*0.939*(10.4-Electron.E()))" , "Q2" ,       60, 0.0, 1.0,     60, 0.0, 10.0, "Status_n >= 2000 && Status_n <= 2999 && Status_Kp >= 2000 && Status_Kp <= 2999 && Status_Km >= 2000 && Status_Km <= 2999 && " + MM_cut + " && MinvKpKm > 0.95 && MinvKpKm < 1.2" ,   false },
 
     //theta vs theta
     { "thetatheta_neutron_km_data", "#theta_{neutron} vs #theta_{K^{-}} with cut status" , "#theta_{neutron} [degree]" , "#theta_{K^{-}} [degree]" , "Neutron.Theta()*180./3.141592" , "Km.Theta()*180./3.141592" ,       60, 0.0, 120.0,     60, 0.0, 120.0, status_cut,   false },

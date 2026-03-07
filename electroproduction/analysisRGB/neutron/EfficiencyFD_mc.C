@@ -37,6 +37,7 @@ void EfficiencyFD_mc() {
     gSystem->Load("libRIO.so");
     gSystem->Load("libHist.so");
     gStyle->SetPalette(kBird); 
+    gStyle->SetOptStat(0);
 
     // ROOT -> TREE
     bool isMC = true;
@@ -197,19 +198,19 @@ void EfficiencyFD_mc() {
 
    TH1F *h_rec_p = new TH1F("h_rec_p", "p neutron REC", nPbins, pmin, pmax);
    TH1F *h_gen_p = new TH1F("h_gen_p", "p neutron GEN", nPbins, pmin, pmax);
-   TH1F *h_eff_p = new TH1F("h_eff_p", "Efficiency vs p", nPbins, pmin, pmax);
+   TH1F *h_eff_p = new TH1F("h_eff_p", "MC Efficiency vs p", nPbins, pmin, pmax);
 
    TH1F *h_rec_p_2 = new TH1F("h_rec_p_2", "p neutron REC", nPbins, pmin, pmax);
    TH1F *h_gen_p_2 = new TH1F("h_gen_p_2", "p neutron GEN", nPbins, pmin, pmax);
-   TH1F *h_eff_p_2 = new TH1F("h_eff_p_2", "Efficiency vs p", nPbins, pmin, pmax);
+   TH1F *h_eff_p_2 = new TH1F("h_eff_p_2", "MC Efficiency vs p", nPbins, pmin, pmax);
 
    TH1F *h_rec_p_tot = new TH1F("h_rec_p_tot", "p neutron REC", nPbins, pmin, pmax);
    TH1F *h_gen_p_tot = new TH1F("h_gen_p_tot", "p neutron GEN", nPbins, pmin, pmax);
-   TH1F *h_eff_p_tot = new TH1F("h_eff_p_tot", "Efficiency vs p", nPbins, pmin, pmax);
+   TH1F *h_eff_p_tot = new TH1F("h_eff_p_tot", "MC efficiency vs p", nPbins, pmin, pmax);
 
    double pt = 2.146;  // seuil de transition (à ajuster)
 
-    TF1 *f_eff_data = new TF1("f_eff_data",  [pt](double *x, double *par) { double P = x[0];
+    TF1 *f_eff_data = new TF1("DATA efficiency vs p",  [pt](double *x, double *par) { double P = x[0];
 
         if (P < pt) {
             return par[0]
@@ -264,13 +265,13 @@ void EfficiencyFD_mc() {
    h_gen_p_tot->GetYaxis()->SetTitle("Counts");
 
    h_eff_p->GetXaxis()->SetTitle("p_{neutron_gen} [GeV]");
-   h_eff_p->GetYaxis()->SetTitle("Efficiency");
+   h_eff_p->GetYaxis()->SetTitle("");
 
    h_eff_p_2->GetXaxis()->SetTitle("p_{neutron_gen} [GeV]");
-   h_eff_p_2->GetYaxis()->SetTitle("Efficiency");
+   h_eff_p_2->GetYaxis()->SetTitle("");
 
    h_eff_p_tot->GetXaxis()->SetTitle("p_{neutron_gen} [GeV]");
-   h_eff_p_tot->GetYaxis()->SetTitle("Efficiency");
+   h_eff_p_tot->GetYaxis()->SetTitle("");
 
 
 
@@ -358,11 +359,14 @@ void EfficiencyFD_mc() {
    h_rec_p->SetMaximum(4*h_rec_p->GetMaximum());
    h_gen_p->SetMaximum(4*h_gen_p->GetMaximum());
 
+   f_eff_data->SetMinimum(0.0);
+   f_eff_data->SetMaximum(1.1);
+
 
    TH1F *h_ratio_p = (TH1F*)h_eff_p_tot->Clone("h_ratio_p");
    h_ratio_p->Reset();
    h_ratio_p->SetTitle("Data/MC Efficiency Ratio");
-   h_ratio_p->GetYaxis()->SetTitle("Data / MC");
+   h_ratio_p->GetYaxis()->SetTitle("");
 
    for (int i = 1; i <= h_eff_p_tot->GetNbinsX(); i++) {
 
@@ -398,7 +402,7 @@ void EfficiencyFD_mc() {
     //pdf
 
 
-   TString pdfFile = "EfficiencyFD_mc_plots.pdf";
+   TString pdfFile = "EfficiencyFD_mc_plots2.pdf";
    TCanvas *c = new TCanvas("c", "Plots", 800, 600);
 
    thetavsphi_neutron_rec->Draw("COLZ"); c->Print(pdfFile + "("); 
@@ -478,7 +482,7 @@ void EfficiencyFD_mc() {
 
    c->Print(pdfFile); 
 
-   f_eff_data->SetRange(0.01, 7.5);
+   f_eff_data->SetRange(0.46, 4.5);
    f_eff_data->Draw();
    c->Print(pdfFile);
 

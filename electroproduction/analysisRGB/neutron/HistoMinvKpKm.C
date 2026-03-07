@@ -39,7 +39,7 @@ void HistoMinvKpKm() {
     gStyle->SetPalette(kBird); 
 
     // ROOT -> TREE
-    bool isMC = false;
+    bool isMC = true;
     TString data_adress;
 
 
@@ -157,8 +157,14 @@ void HistoMinvKpKm() {
     //TRAITEMENT BORNES EN Q2
     std::vector<TH1F*> histograms;
     std::vector<TH1F*> histograms_Ngen;
+    std::vector<TH2D*> correction_bins;
     std::vector<double> bornesQ2;
+    std::vector<double> bornesxb;
+    std::vector<double> liste_moyQ2;
+    std::vector<double> liste_moyW;
+    std::vector<double> liste_moyxb;
     double valeur; //pr parcourir les fichiers
+
 
     std::string name_fichierQ2 = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_analysis/bornes_bins/bornes_Q2.txt";
     std::ifstream fichierQ2(name_fichierQ2);
@@ -169,16 +175,25 @@ void HistoMinvKpKm() {
  
     fichierQ2.close();
 
-    std::cout << "Liste des bins en E_gamma : "; // Affichage du contenu du vecteur
+    std::cout << "Liste des bins en Q2 : "; // Affichage du contenu du vecteur
     for (float val : bornesQ2) std::cout << val << " ";
     std::cout << std::endl;
 
     int nb_bin_Q2 = bornesQ2.size()-1;
 
+    //TRaitement des bins en xb pour chaque bin en Q2
+
+    bornesxb.push_back(0.05);
+    bornesxb.push_back(0.34);
+    bornesxb.push_back(0.08);
+    bornesxb.push_back(0.8); //0.82 avant
+
+
 
     //TRAITEMENT BORNES EN t
 
     std::vector<std::vector<double>> liste_de_listes(bornesQ2.size()-1);
+    std::vector<std::vector<double>> valeurmoybins_tmiss(bornesQ2.size()-1);
 
     size_t k = bornesQ2.size()-1; // Par exemple, on a 5 fichiers de 0 à 4
 
@@ -210,16 +225,35 @@ void HistoMinvKpKm() {
 
     // Initialisation des histogrammes
 
+
+    for (int i = 0; i < 2; i++) {
+
+    TH2D *h = new TH2D(
+        Form("correction_bin%d", i),   // nom interne
+        Form("correction_bin%d", i),   // titre
+        120, bornesxb[2*i], bornesxb[2*i+1],                      // X bins
+        120, bornesQ2[i], bornesQ2[i+1]                     // Y bins
+    );
+
+    h->Sumw2();   // IMPORTANT pour les erreurs
+
+    correction_bins.push_back(h);
+
+    }
+
+
+
+
     double bins = 18;
     double bornefill1, bornefill2;
     bornefill1 = 0.992;
-    bornefill2 = 1.2;
+    bornefill2 = 1.1;
 
     if (isMC){
 
         bornefill1 = 0.992;
-        bornefill2 = 1.2;
-        bins = 35;
+        bornefill2 = 1.1;
+        bins = 18;
     }
 
     for (int i = 0; i < nb_bin_Q2; i++) {
@@ -240,11 +274,21 @@ void HistoMinvKpKm() {
     double compteur_histo = 0;
 
     for (int i = 0; i < nb_bin_Q2; i++) {
+
+        double Q2_moy = 0;
+        double cptQ2 = 0;
+        double W_moy = 0;
+        double cptW = 0;
+        double xb_moy = 0;
+        double cptxb = 0;
   
         double Q2_lim1 = bornesQ2[i];
         double Q2_lim2 = bornesQ2[i+1];
 
         for (int j = 0; j < liste_de_listes[i].size()-1; j++) {
+
+            double t_moy = 0;
+            double cptt = 0;
 
             double tlim_a = liste_de_listes[i][j];
             double tlim_b = liste_de_listes[i][j+1];
@@ -270,6 +314,21 @@ void HistoMinvKpKm() {
 
                         histograms[compteur_histo]->Fill(M);
 
+                        if(MinvKpKm > 0.95 && MinvKpKm < 1.1 ){
+
+                            Q2_moy += Q2;
+                            t_moy += t_missing_nucleon;
+                            W_moy += W;
+                            xb_moy += Q2/(2*0.939*(10.4-Electron->E()));
+
+                            cptxb += 1;
+                            cptQ2 += 1;
+                            cptW += 1;
+                            cptt +=1;
+
+                        }
+
+
                     }
 
 
@@ -285,8 +344,14 @@ void HistoMinvKpKm() {
             //histograms[compteur_histo]->Sumw2();
             
             compteur_histo += 1;
+            valeurmoybins_tmiss[i].push_back(-t_moy/cptt);
 
         }
+
+        liste_moyQ2.push_back(Q2_moy/cptQ2);
+        liste_moyW.push_back(W_moy/cptW);
+        liste_moyxb.push_back(xb_moy/cptxb);
+
     }
 
 
@@ -330,6 +395,144 @@ void HistoMinvKpKm() {
 
     }
 
+    //CORRECTION BINS Q2 && xb
+
+    if(isMC){
+
+            for (int i = 0; i < nb_bin_Q2; i++) {
+  
+                    double Q2_lim1 = bornesQ2[i];
+                    double Q2_lim2 = bornesQ2[i+1];
+                    double xb_lim1 = bornesxb[2*i];
+                    double xb_lim2 = bornesxb[2*i+1];
+
+                    Long64_t nentries = tree_gen->GetEntries();
+
+                    for (Long64_t k = 0; k < nentries; k++) {
+
+                        tree_gen->GetEntry(k);
+
+                        if(Q2_gen > Q2_lim1 && Q2_gen < Q2_lim2 && Q2_gen/(2*0.939*(10.4-Electron_gen->E())) > xb_lim1 && Q2_gen/(2*0.939*(10.4-Electron_gen->E())) < xb_lim2){
+
+                            correction_bins[i]->Fill(Q2_gen/(2*0.939*(10.4-Electron_gen->E())), Q2_gen, real_weight_gen);
+
+                        }
+                    }
+
+
+            }
+        
+    }
+
+    if(isMC){
+
+        for (int i = 0; i < nb_bin_Q2; i++) {
+
+        TH2D* h = correction_bins[i];
+
+        double n_total = h->GetNbinsX() * h->GetNbinsY();
+        double n_filled = 0;
+
+        for (int bx = 1; bx <= h->GetNbinsX(); bx++) {
+             for (int by = 1; by <= h->GetNbinsY(); by++) {
+
+                if (h->GetBinContent(bx, by) > 0) {
+                    n_filled++;
+                }
+            }
+        }
+
+        double correction_factor = n_filled/ n_total;
+
+        std::cout << "Bin " << i 
+             << " phase-space correction = "
+            << correction_factor << std::endl;
+
+        }
+
+    }
+
+    TFile *f_correctionbins = new TFile("correctionbins.root", "RECREATE");
+
+    for (int i = 0; i < 2; i++) {
+        correction_bins[i]->Write();
+    }
+
+    f_correctionbins->Close();
+
+
+    if(isMC == false){
+
+    //sauvegarde des Q2 moy
+
+    std::string chemin_bin = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_analysis/bornes_bins/";
+    // Nom du fichier : integral_t_0.txt, integral_t_1.txt, ...
+    std::string filename2 = chemin_bin + Form("bornes_Q2_moy.txt");
+    std::ofstream outfile2(filename2);
+
+    for (size_t i = 0; i < liste_moyQ2.size(); ++i) {
+
+    outfile2 << liste_moyQ2[i] << std::endl;
+
+    }
+    std::cout << "les Q2 moy on été sauvegardé dans " << filename2 << std::endl;
+
+    outfile2.close();
+
+
+
+    //sauvegarde des W moy
+    // Nom du fichier : integral_t_0.txt, integral_t_1.txt, ...
+    std::string filename3 = chemin_bin + Form("bornes_W_moy.txt");
+    std::ofstream outfile3(filename3);
+
+    for (size_t i = 0; i < liste_moyW.size(); ++i) {
+
+    outfile3 << liste_moyW[i] << std::endl;
+
+    }
+    std::cout << "les W moy on été sauvegardé dans " << filename3 << std::endl;
+
+    outfile3.close();
+
+
+
+    //sauvegarde des W moy
+    // Nom du fichier : integral_t_0.txt, integral_t_1.txt, ...
+    std::string filename4 = chemin_bin + Form("bornes_xb_moy.txt");
+    std::ofstream outfile4(filename4);
+
+    for (size_t i = 0; i < liste_moyxb.size(); ++i) {
+
+    outfile4 << liste_moyxb[i] << std::endl;
+
+    }
+    std::cout << "les xb moy on été sauvegardé dans " << filename4 << std::endl;
+
+    outfile4.close();
+
+
+
+    //sauvegarde des t_moy
+
+    for (size_t i = 0; i < valeurmoybins_tmiss.size(); ++i) {
+    // Nom du fichier : integral_t_0.txt, integral_t_1.txt, ...
+    std::string filename = chemin_bin + Form("bornes_t_moy_%zu.txt", i);
+    std::ofstream outfile(filename);
+
+    // Écrire tous les nsig pour ce Q² en une seule ligne
+    for (size_t j = 0; j < valeurmoybins_tmiss[i].size(); ++j) {
+        outfile << valeurmoybins_tmiss[i][j] << std::endl;
+    }
+    outfile << std::endl;
+
+    outfile.close();
+    std::cout << "les t_moy pour le bin en Q2 numero  " << i << "on été écris dans : " << filename << std::endl;
+    }
+
+
+    }
+
 
 
 
@@ -362,7 +565,7 @@ void HistoMinvKpKm() {
     }
 
     // Création et ouverture d’un fichier ROOT en écriture
-    TFile *outputFile = new TFile("Histos_MinvKpKm_data.root", "RECREATE");
+    TFile *outputFile = new TFile("Histos_MinvKpKm_mc.root", "RECREATE");
 
     for (int i = 0; i < histograms.size(); ++i) {
         if (histograms[i]) {
@@ -383,7 +586,7 @@ void HistoMinvKpKm() {
     }
 
     outputFile->Close();  // Ferme proprement le fichier
-    std::cout << "Tous les histogrammes ont été sauvegardés dans Histos_MinvKpKm_data.root" << std::endl;
+    std::cout << "Tous les histogrammes ont été sauvegardés dans Histos_MinvKpKm data ou mc .root" << std::endl;
 
 
 

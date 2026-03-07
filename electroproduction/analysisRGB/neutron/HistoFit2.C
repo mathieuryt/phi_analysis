@@ -128,7 +128,7 @@ void HistoFit2()
                 // -----------------------
                 // Variable observable
                 // -----------------------
-                RooRealVar mass("mass", "M(K^{+}K^{-}) [GeV]", 0.992, 1.2);
+                RooRealVar mass("mass", "M(K^{+}K^{-}) [GeV]", 0.992, 1.1);
 
 
                 // -----------------------
@@ -140,7 +140,7 @@ void HistoFit2()
                 // Signal (Gaussian)
                 // -----------------------
                 RooRealVar mean("mean", "mean", 1.02, 1.01, 1.03);
-                RooRealVar sigma("sigma", "sigma", 0.006, 0.001, 0.007);
+                RooRealVar sigma("sigma", "sigma", 0.006, 0.002, 0.007);
 
                 RooGaussian signal("signal", "signal pdf", mass, mean, sigma);
 
@@ -237,12 +237,12 @@ void HistoFit2()
                 TH1F *hMC_withBkg = (TH1F*)hMC->Clone(Form("%s_withBkg", hname.Data()));
                 int nBkgToGenerate = (int) nbkg.getVal();
 
-                TF1 fbkg("fbkg", "sqrt(x*x - 4*0.493677*0.493677) * exp([0]*x + [1]*x*x)", 0.992, 1.2);
+                TF1 fbkg("fbkg", "sqrt(x*x - 4*0.493677*0.493677) * exp([0]*x + [1]*x*x)", 0.992, 1.1);
 
                 fbkg.SetParameters(a0.getVal(), a1.getVal());
                 hMC_withBkg->FillRandom("fbkg", nBkgToGenerate);
 
-                RooRealVar mass_mc("mass_mc", "M(K^{+}K^{-}) [GeV]", 0.992, 1.2);
+                RooRealVar mass_mc("mass_mc", "M(K^{+}K^{-}) [GeV]", 0.992, 1.1);
 
                 RooDataHist data_mc("data_mc", "data_mc", mass_mc, Import(*hMC_withBkg));
 
