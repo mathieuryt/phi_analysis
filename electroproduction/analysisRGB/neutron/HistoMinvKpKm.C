@@ -39,16 +39,17 @@ void HistoMinvKpKm() {
     gStyle->SetPalette(kBird); 
 
     // ROOT -> TREE
-    bool isMC = true;
+    bool isMC = false;
+    bool smearing_on = true;
     TString data_adress;
 
 
     if(isMC == false){
-        data_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_neutronKpKm_bis_angle.root";
+        data_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_neutronKpKm_data_v2.root";
     }
 
     if(isMC == true){
-        data_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_neutronKpKm_mc_v2.root";
+        data_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_neutronKpKm_mc_v7.root";
     }
 
 
@@ -73,6 +74,8 @@ void HistoMinvKpKm() {
     TLorentzVector *Neutron = nullptr;
     TLorentzVector *Kp = nullptr;
     TLorentzVector *Km = nullptr;
+    TLorentzVector *Kp_smear = nullptr;
+    TLorentzVector *Km_smear = nullptr;
     TLorentzVector *Missing = nullptr;
 
     tree->SetBranchAddress("Electron", &Electron);
@@ -109,9 +112,12 @@ void HistoMinvKpKm() {
 
     double weight;
     double real_weight;
-    double real_weight_correction;
+    double real_weight_effcorrection;
+    double real_weight_SDME_effcorrection, real_weight_SDME_trans_effcorrection, real_weight_SDME_long_effcorrection;
+
 
     double weight_gen;
+    double real_weight_gen_SDME, real_weight_gen_SDME_trans, real_weight_gen_SDME_long;
     double real_weight_gen;
     TLorentzVector *Electron_gen = nullptr;
     TLorentzVector *Neutron_gen = nullptr;
@@ -128,16 +134,25 @@ void HistoMinvKpKm() {
 
         tree->SetBranchAddress("weight", &weight);
         tree->SetBranchAddress("real_weight", &real_weight);
-        tree->SetBranchAddress("real_weight_correction", &real_weight_correction);
+        tree->SetBranchAddress("real_weight_SDME_effcorrection", &real_weight_SDME_effcorrection); //le seul qui sert ici 
+        tree->SetBranchAddress("real_weight_SDME_trans_effcorrection", &real_weight_SDME_trans_effcorrection);
+        tree->SetBranchAddress("real_weight_SDME_long_effcorrection", &real_weight_SDME_long_effcorrection);
+        tree->SetBranchAddress("real_weight_effcorrection", &real_weight_effcorrection); //ou lui
 
         tree_gen->SetBranchAddress("weight_gen", &weight_gen);
-        tree_gen->SetBranchAddress("real_weight_gen", &real_weight_gen);
+        tree_gen->SetBranchAddress("real_weight_gen_SDME", &real_weight_gen_SDME); //same 
+        tree_gen->SetBranchAddress("real_weight_gen_SDME_trans", &real_weight_gen_SDME_trans); //same
+        tree_gen->SetBranchAddress("real_weight_gen_SDME_long", &real_weight_gen_SDME_long); //same 
+        tree_gen->SetBranchAddress("real_weight_gen", &real_weight_gen); //same 
 
         tree_gen->SetBranchAddress("Electron_gen", &Electron_gen);
         tree_gen->SetBranchAddress("Neutron_gen", &Neutron_gen);
         tree_gen->SetBranchAddress("Kp_gen", &Kp_gen);
         tree_gen->SetBranchAddress("Km_gen", &Km_gen);
         tree_gen->SetBranchAddress("Missing_gen", &Missing_gen);
+
+        tree->SetBranchAddress("Km_smear", &Km_smear);
+        tree->SetBranchAddress("Kp_smear", &Kp_smear);
 
         tree_gen->SetBranchAddress("Q2_gen", &Q2_gen);
         tree_gen->SetBranchAddress("t_gen", &t_gen);
@@ -166,7 +181,7 @@ void HistoMinvKpKm() {
     double valeur; //pr parcourir les fichiers
 
 
-    std::string name_fichierQ2 = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_analysis/bornes_bins/bornes_Q2.txt";
+    std::string name_fichierQ2 = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_analysis/bornes_bins/bornes_Q2_oneplot.txt";
     std::ifstream fichierQ2(name_fichierQ2);
 
     while (fichierQ2 >> valeur) {
@@ -199,7 +214,7 @@ void HistoMinvKpKm() {
 
     for (size_t i = 0; i < k; ++i) {
         
-        std::string name_fichiert = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_analysis/bornes_bins/bornes_t_" + std::to_string(i) + ".txt";
+        std::string name_fichiert = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_analysis/bornes_bins/bornes_t_" + std::to_string(i) + "_oneplot.txt";
         std::ifstream fichiert(name_fichiert);
 
         if (fichiert) {
@@ -244,17 +259,10 @@ void HistoMinvKpKm() {
 
 
 
-    double bins = 18;
+    double bins = 32;
     double bornefill1, bornefill2;
-    bornefill1 = 0.992;
+    bornefill1 = 0.990;
     bornefill2 = 1.1;
-
-    if (isMC){
-
-        bornefill1 = 0.992;
-        bornefill2 = 1.1;
-        bins = 18;
-    }
 
     for (int i = 0; i < nb_bin_Q2; i++) {
         for (int j =0; j<liste_de_listes[i].size()-1; j++) {
@@ -272,6 +280,7 @@ void HistoMinvKpKm() {
     //REMPLISSAGE histograms
 
     double compteur_histo = 0;
+    double M_smear;
 
     for (int i = 0; i < nb_bin_Q2; i++) {
 
@@ -305,6 +314,12 @@ void HistoMinvKpKm() {
                 // calcul du quadrivecteur k = p -p'
                 double M = (*Kp + *Km).M();
 
+                if(isMC){
+
+                    M_smear = (*Kp_smear + *Km_smear).M();
+
+                }
+
 
                 if (angle_neutron_missnucl*180./3.14159 < 5 && Q2 > 1 && Missing->M2() < 0.5 && Missing->M2() > -0.5 && Electron->P()>2 && Neutron->Theta()*180./3.141592 > 4 && Neutron->P()>0.25 && status_Kp >= 2000 && status_Kp <= 2999 && status_Km >= 2000 && status_Km <= 2999 && Q2 > Q2_lim1 && Q2 < Q2_lim2 && t_missing_nucleon < tlim_a && t_missing_nucleon > tlim_b && M > 0.987) {
 
@@ -334,7 +349,15 @@ void HistoMinvKpKm() {
 
                     if(isMC == true){
 
-                        histograms[compteur_histo]->Fill(M, real_weight_correction); // quand c'est MC on fit les rec avec le real_weight 
+                        if(smearing_on == true){
+
+                            histograms[compteur_histo]->Fill(M_smear, real_weight_effcorrection); // quand c'est MC on fit les rec avec le real_weight 
+
+                        }else{
+
+                            histograms[compteur_histo]->Fill(M, real_weight_effcorrection); // quand c'est MC on fit les rec avec le real_weight 
+
+                        }
 
                     }
     
@@ -467,7 +490,7 @@ void HistoMinvKpKm() {
 
     std::string chemin_bin = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_analysis/bornes_bins/";
     // Nom du fichier : integral_t_0.txt, integral_t_1.txt, ...
-    std::string filename2 = chemin_bin + Form("bornes_Q2_moy.txt");
+    std::string filename2 = chemin_bin + Form("bornes_Q2_moy_oneplot.txt");
     std::ofstream outfile2(filename2);
 
     for (size_t i = 0; i < liste_moyQ2.size(); ++i) {
@@ -483,7 +506,7 @@ void HistoMinvKpKm() {
 
     //sauvegarde des W moy
     // Nom du fichier : integral_t_0.txt, integral_t_1.txt, ...
-    std::string filename3 = chemin_bin + Form("bornes_W_moy.txt");
+    std::string filename3 = chemin_bin + Form("bornes_W_moy_oneplot.txt");
     std::ofstream outfile3(filename3);
 
     for (size_t i = 0; i < liste_moyW.size(); ++i) {
@@ -499,7 +522,7 @@ void HistoMinvKpKm() {
 
     //sauvegarde des W moy
     // Nom du fichier : integral_t_0.txt, integral_t_1.txt, ...
-    std::string filename4 = chemin_bin + Form("bornes_xb_moy.txt");
+    std::string filename4 = chemin_bin + Form("bornes_xb_moy_oneplot.txt");
     std::ofstream outfile4(filename4);
 
     for (size_t i = 0; i < liste_moyxb.size(); ++i) {
@@ -517,7 +540,7 @@ void HistoMinvKpKm() {
 
     for (size_t i = 0; i < valeurmoybins_tmiss.size(); ++i) {
     // Nom du fichier : integral_t_0.txt, integral_t_1.txt, ...
-    std::string filename = chemin_bin + Form("bornes_t_moy_%zu.txt", i);
+    std::string filename = chemin_bin + Form("bornes_t_moy_%zu_oneplot.txt", i);
     std::ofstream outfile(filename);
 
     // Écrire tous les nsig pour ce Q² en une seule ligne
@@ -565,7 +588,7 @@ void HistoMinvKpKm() {
     }
 
     // Création et ouverture d’un fichier ROOT en écriture
-    TFile *outputFile = new TFile("Histos_MinvKpKm_mc.root", "RECREATE");
+    TFile *outputFile = new TFile("Histos_MinvKpKm_data_fall2019_oneplot.root", "RECREATE");
 
     for (int i = 0; i < histograms.size(); ++i) {
         if (histograms[i]) {

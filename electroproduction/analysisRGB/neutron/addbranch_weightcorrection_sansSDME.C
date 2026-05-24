@@ -12,7 +12,7 @@
 #include "TLatex.h"
 #include "TLorentzVector.h"
 
-void addbranch_weightcorrection() {
+void addbranch_weightcorrection_sansSDME() {
 
     // ------------------------------
     // Ouvrir le fichier TTree MC
@@ -44,26 +44,26 @@ void addbranch_weightcorrection() {
     TLorentzVector *Km = nullptr;
     TLorentzVector *Missing_nucleon = nullptr;
 
-    double weight_SDME_long;
-    double real_weight_SDME_long;
+    double weight;
+    double real_weight;
 
     t->SetBranchAddress("Electron", &Electron);
     t->SetBranchAddress("Kp", &Kp);
     t->SetBranchAddress("Km", &Km);
     t->SetBranchAddress("Missing_nucleon", &Missing_nucleon);
-    t->SetBranchAddress("weight_SDME_long", &weight_SDME_long);
-    t->SetBranchAddress("real_weight_SDME_long", &real_weight_SDME_long);
+    t->SetBranchAddress("weight", &weight);
+    t->SetBranchAddress("real_weight", &real_weight);
 
 
     // ------------------------------
     // Déclarer la nouvelle branch
     // ------------------------------
 
-    double real_weight_SDME_long_effcorrection;
-    double weight_SDME_long_effcorrection;
+    double real_weight_effcorrection;
+    double weight_effcorrection;
 
-    TBranch *breal_weight_SDME_long_effcorrection = t->Branch("real_weight_SDME_long_effcorrection", &real_weight_SDME_long_effcorrection, "real_weight_SDME_long_effcorrection/D");
-    TBranch *bweight_SDME_long_effcorrection = t->Branch("weight_SDME_long_effcorrection", &weight_SDME_long_effcorrection, "weight_SDME_long_effcorrection/D");
+    TBranch *breal_weight_effcorrection = t->Branch("real_weight_effcorrection", &real_weight_effcorrection, "real_weight_effcorrection/D");
+    TBranch *bweight_effcorrection = t->Branch("weight_effcorrection", &weight_effcorrection, "weight_effcorrection/D");
 
     // ------------------------------
     // Boucle sur le TTree
@@ -82,8 +82,8 @@ void addbranch_weightcorrection() {
             corr = h_ratio_p->GetBinContent(bin);
 
         // poids corrigé
-        real_weight_SDME_long_effcorrection = real_weight_SDME_long * corr;
-        weight_SDME_long_effcorrection = weight_SDME_long * corr;
+        real_weight_effcorrection = real_weight * corr;
+        weight_effcorrection = weight * corr;
 
         if(i % 500 == 0){
             std::cout<< "P miss = " << P_missing_nucleon << " and correction = " << corr << std::endl;
@@ -91,8 +91,8 @@ void addbranch_weightcorrection() {
         }
 
         // remplir la branch
-        breal_weight_SDME_long_effcorrection->Fill();
-        bweight_SDME_long_effcorrection->Fill();
+        breal_weight_effcorrection->Fill();
+        bweight_effcorrection->Fill();
 
     }
 
@@ -103,6 +103,7 @@ void addbranch_weightcorrection() {
     t->Write("", TObject::kOverwrite);
     f_tree->Close();
     f_ratio->Close();
+
 
     std::cout << "Branch real_weight_effcorrection ajoutée avec succès !" << std::endl;
 

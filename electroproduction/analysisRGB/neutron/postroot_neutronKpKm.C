@@ -50,7 +50,7 @@ int postroot_neutronKpKm()
 {
     gROOT->SetBatch(kTRUE);
     gStyle->SetPalette(kBird); 
-    //gStyle->SetOptStat(0);
+    gStyle->SetOptStat(0);
 
 
     // ===============================
@@ -71,9 +71,9 @@ int postroot_neutronKpKm()
 
     if (fall2018_inbending){
 
-        data_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_neutronKpKm_bis_angle.root";
-        mc_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_neutronKpKm_mc_v2.root";
-        mc_contamination_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_contamination_proton_KpKm_mc_v1.root";
+        data_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_neutronKpKm_data_v2.root";
+        mc_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_neutronKpKm_mc_v6.root"; //with weight SDME
+        mc_contamination_adress = "/Users/mr282803/Documents/analysisRGB/neutron/neutron_data2/fall2019_outbending_contamination_proton_KpKm_mc_v1.root"; // sdme not yet
 
     }
 
@@ -114,7 +114,8 @@ int postroot_neutronKpKm()
         //"positron_HTCC_ECAL_match==1 && electron_HTCC_ECAL_match==1 && "
         //"abs(MMassBeam)<0.4 && Q2>0 && abs(Q2)<0.5";
 
-    TCut weightMC = "weight_mc_correction2";
+    //TCut weightMC = "weight_mc_correction2";
+    TCut weightMC = "weight_SDME_effcorrection";
 
 
     TString status_cut ="Status_Kp >= 2000 && Status_Kp <= 2999 && Status_Km >= 2000 && Status_Km <= 2999";
@@ -125,11 +126,18 @@ int postroot_neutronKpKm()
     // ===============================
     std::vector<Plot1D> plots = {
 
+        {"Kaons_diffrecgen"," P_{K+ GEN} - P_{K+ REC}  ; ",   "P_{K+ GEN} - P_{K+ REC}",     "Kp_gen_associated.P() - Kp.P()", "Nothing",       70, -0.2, 0.2, -1, -1   , status_cut + "&&" + MM_cut, false, true, false, false},
+        {"Kaons_diffrecgen2"," P_{K+ GEN} - P_{K+ REC}  ; ",   "P_{K+ GEN} - P_{K+ REC}",     "Km_gen_associated.P() - Km.P()", "Nothing",       70, -0.2, 0.2, -1, -1   , status_cut + "&&" + MM_cut, false, true, false, false},
+
         {"Q2"," ; ",   "Q^{2} [GeV^{2}]",     "Q2", "Nothing",       80, 0.0, 10.0, -1, -1   , "", false, true, false, true},
         {"Q2_2"," ; ",   "Q^{2} [GeV^{2}]",     "Q2", "Nothing",       80, 0.0, 10.0, -1, -1   , "Missing.M2() < 3.5 && Missing.M2() > -3.5", false, true, false, true},
         {"Q2_3"," ; ",   "Q^{2} [GeV^{2}]",     "Q2", "Nothing",       80, 0.0, 10.0, -1, -1   , "Missing.M2() < 0.5 && Missing.M2() > -0.5", false, true,false, true},
         {"Q2_4"," ; ",   "Q^{2} [GeV^{2}]",     "Q2", "Nothing",       80, 0.0, 10.0, -1, -1   , "angle_neutron_missnucl*180./3.14159 < 15", false, true, false,true},
         {"Q2_5"," ; ",   "Q^{2} [GeV^{2}]",     "Q2", "Nothing",       80, 0.0, 10.0, -1, -1   , status_cut + "&&" + "angle_neutron_missnucl*180./3.14159 < 15 && Missing.M2() < 0.5 && Missing.M2() > -0.5", false, true,false, true},
+
+
+        {"costhetaH"," costhetaH ; ",   "cos(#theta_{H})",     "cos_theta_H", "Nothing",       50, -1.2, 1.2, -1, -1   , status_cut + "&&" + MM_cut + "&&" + "0.9 < MinvKpKm && MinvKpKm < 1.15 && Q2 < 1.5", false, true, false, true},
+        {"costhetaH_2"," costhetaH ; ",   "cos(#theta_{H})",     "cos_theta_H", "Nothing",       50, -1.2, 1.2, -1, -1   , status_cut + "&&" + MM_cut + "&& Q2 < 1.5", false, true, false, false},
         
         {"t"," t without cuts; ",   "t [GeV^{2}]",     "t", "t_missing_nucleon",      80, -8.0, 0.0, -1,-1   , "",false, true,false, true},
         {"t_2"," t with status cut ; ",   "t [GeV^{2}]",     "t", "t_missing_nucleon",      80, -8.0, 0.0, -1,-1   , status_cut ,false, true,false, true},
@@ -153,9 +161,9 @@ int postroot_neutronKpKm()
         {"Neutron_momentum","Neutron momemtum ; ",  "p [GeV]",     "Neutron.P()",  "Missing_nucleon.P()",       80, 0.0, 12.0, -1,-1, status_cut,false, true, false, true},
         {"Neutron_momentum_2","Missing nucleon momemtum ; ",  "p [GeV]",     "Missing_nucleon.P()",  "Nothing",       80, 0.0, 12.0, -1,-1, status_cut,false, true, false, true},
         {"Neutron_momentum_3","Missing nucleon momemtum ; ",  "p [GeV]",     "Neutron_gen_associated.P()",  "Nothing",       80, 0.0, 12.0, -1,-1, status_cut,false, true, false, false},
-        {"Neutron_theta","Neutron theta ; ",  "#theta [deg]",     "Neutron.Theta()*180./3.141592", "Missing_nucleon.Theta()*180./3.141592",       80, 0.0, 70.0, -1,-1, status_cut,false, true,false, true},
+        {"Neutron_theta","Neutron #theta ; ",  "#theta [deg]",     "Neutron.Theta()*180./3.141592", "Missing_nucleon.Theta()*180./3.141592",       80, 0.0, 70.0, -1,-1, status_cut,false, true,false, true},
         {"Neutron_theta_2","Neutron theta with FC ; ",  "#theta [deg]",     "Neutron.Theta()*180./3.141592", "Nothing",       80, 0.0, 70.0, -1,-1, status_cut + " && Status_n >= 2000 && Status_n <= 2999 && ((Lv_PCAL_n > 9.0 && Lw_PCAL_n > 9.0 && Lu_PCAL_n < 404.0) || x_PCAL_n == 0) && ((Lv_ECIN_n > 9.0 && Lw_ECIN_n > 9.0 && Lu_ECIN_n < 404.0) || x_ECIN_n == 0) && ((Lv_ECOUT_n > 9.0 && Lw_ECOUT_n > 9.0 && Lu_ECOUT_n < 404.0) || x_ECOUT_n == 0)",false, true,false, false},
-        {"Neutron_phi"," ; ",  "#phi [deg]",     "Neutron.Phi()*180./3.141592",  "Missing_nucleon.Phi()*180./3.141592",       80, -200.0, 200.0, -1,-1, status_cut,false, true, false,true},
+        {"Neutron_phi","Neutron #phi; ",  "#phi [deg]",     "Neutron.Phi()*180./3.141592",  "Missing_nucleon.Phi()*180./3.141592",       80, -200.0, 200.0, -1,-1, status_cut,false, true, false,true},
         {"Neutron_phi_3"," ; ",  "#phi [deg]",     "Neutron.Phi()*180./3.141592",  "Nothing",       80, -200.0, 200.0, -1,-1, status_cut ,false, true, false,false},
         {"Neutron_phi_2"," ; ",  "#phi [deg]",     "Neutron.Phi()*180./3.141592",  "Nothing",       350, -200.0, 200.0, -1,-1, status_cut + " && Status_n >= 2000 && Status_n <= 2999 && ((Lv_PCAL_n > 9.0 && Lw_PCAL_n > 9.0 && Lu_PCAL_n < 404.0) || x_PCAL_n == 0) && ((Lv_ECIN_n > 9.0 && Lw_ECIN_n > 9.0 && Lu_ECIN_n < 404.0) || x_ECIN_n == 0) && ((Lv_ECOUT_n > 9.0 && Lw_ECOUT_n > 9.0 && Lu_ECOUT_n < 404.0) || x_ECOUT_n == 0)",false, true, false,false},
         {"Neutron_phi_5"," ; ",  "#phi [deg]",     "Neutron.Phi()*180./3.141592",  "Nothing",       80, -200.0, 200.0, -1,-1, status_cut + " && Status_n >= 2000 && Status_n <= 2999 && ((Lv_PCAL_n > 9.0 && Lw_PCAL_n > 9.0 && Lu_PCAL_n < 404.0) || x_PCAL_n == 0) && ((Lv_ECIN_n > 9.0 && Lw_ECIN_n > 9.0 && Lu_ECIN_n < 404.0) || x_ECIN_n == 0) && ((Lv_ECOUT_n > 9.0 && Lw_ECOUT_n > 9.0 && Lu_ECOUT_n < 404.0) || x_ECOUT_n == 0) && (x_PCAL_n != 0 || x_ECIN_n != 0 || x_ECOUT_n != 0) && e_vx < 0.1 && e_vx > -0.1 && e_vy < 0.1 && e_vy > -0.1 && n_vx < 1 && n_vx > -1 && n_vy < 1 && n_vy > -1",false, true, false,false},
@@ -180,10 +188,11 @@ int postroot_neutronKpKm()
         //{"MM", "MM ;",   "MM[GeV]",  "MissingMass",         80, -1.7, 1.7, 1.019,-1, "", false, true, true},
 
 
-        {"MM_2", "MM_2 ;",   "MissingMass^{2}[GeV^{2}]",  "Missing.M2()",   "Nothing",      160, -2, 2, 0.5, 0.5, status_cut, false, true,false, true},
+        {"MM_2", "M^{2}_{eK^{+}K^{-}nX} ;",   "M^{2}_{eK^{+}K^{-}nX}[GeV^{2}]",  "Missing.M2()",   "Nothing",      160, -1.5, 1.5, 0.5, 0.5, status_cut, false, true,false, true},
         {"MinvKpKm_hist_0", "MinvKpKm without cut ;",   "Minv (K+ K-) [GeV]",  "MinvKpKm",   "Nothing",     100, 0.95, 1.12, 1.019,-1, "", false, true, true,true},
         {"MinvKpKm_hist_1", "MinvKpKm with cut on status ;",   "Minv (K+ K-) [GeV]",  "MinvKpKm",    "Nothing",     100, 0.95, 1.12, 1.019,-1, status_cut, false, true, true,true},
-        {"MinvKpKm_hist_2", "Minv(K+ K-) with cut on status and MM^{2};",   "Minv (K+ K-) [GeV]",  "MinvKpKm",  "Nothing",     100, 0.95, 1.12, 1.019,-1, status_cut + "&&" + MM_cut, false, true,true, true},
+        //Minv(K+ K-) with cut on status and MM^{2}
+        {"MinvKpKm_hist_2", ";",   "Minv (K+ K-) [GeV]",  "MinvKpKm",  "Nothing",     100, 0.95, 1.12, 1.019,-1, status_cut + "&&" + MM_cut, false, true,true, true},
         {"MinvKpKm_hist_2bis", "Minv(K+ K-) with cut on status and MM^{2} bin en t;",   "Minv (K+ K-) [GeV]",  "MinvKpKm",  "Nothing",     100, 0.95, 1.12, 1.019,-1, "t < -0.5 && t > -0.90 && " + status_cut + "&&" + MM_cut, false, true,true, true},
         {"MinvKpKm_hist_3", "MinvKpKm with cut on status, MM^{2}, and missE, missPt.. ;",   "Minv (K+ K-) [GeV]",  "MinvKpKm", "Nothing",        100, 0.95, 1.12, 1.019,-1, status_cut + "&&" + MM_cut + "&&" + "Missing.E() < 1.0 && Missing.Pt() < 2.0 && Kp.P() > 0.2 && Km.P() > 0.2", false, true,true, true}
 
@@ -243,7 +252,7 @@ int postroot_neutronKpKm()
 
     std::vector<Plot2D> plots2 = {
 
-    { "t_vs_Q2_data", "t with missing vs Q^{2}" , "t [GeV^{2}]" , "Q^{2} [GeV^{2}]" , "t_missing_nucleon" , "Q2" ,       60, -8.0, 0.0,     60, 0.0, 10.0, "",   false },
+    { "t_vs_Q2_data", "t with missing nucleon vs Q^{2}" , "t [GeV^{2}]" , "Q^{2} [GeV^{2}]" , "t_missing_nucleon" , "Q2" ,       60, -9.0, 0.0,     60, 1.0, 10.0, "",   false },
     { "t_vs_Q2_MC", "t with missisng vs Q^{2}" , "t [GeV^{2}]" , "Q^{2} [GeV^{2}]" , "t_missing_nucleon" , "Q2" ,       60, -8.0, 0.0,     60, 0.0, 10.0, "",   true },
     { "Q2_vs_xbj_mc", "Q^{2} vs x_{bj}" , "x_{bj}" , "Q^{2} [GeV^{2}]" , "Q2/(2*0.939*(10.4-Electron.E()))" , "Q2" ,       60, 0.0, 1.0,     60, 0.0, 10.0, "Status_n >= 2000 && Status_n <= 2999 && Status_Kp >= 2000 && Status_Kp <= 2999 && Status_Km >= 2000 && Status_Km <= 2999 && " + MM_cut + " && MinvKpKm > 0.95 && MinvKpKm < 1.2" ,   true },
     { "Q2_vs_xbj_data", "Q^{2} vs x_{bj}" , "x_{bj}" , "Q^{2} [GeV^{2}]" , "Q2/(2*0.939*(10.4-Electron.E()))" , "Q2" ,       60, 0.0, 1.0,     60, 0.0, 10.0, "Status_n >= 2000 && Status_n <= 2999 && Status_Kp >= 2000 && Status_Kp <= 2999 && Status_Km >= 2000 && Status_Km <= 2999 && " + MM_cut + " && MinvKpKm > 0.95 && MinvKpKm < 1.2" ,   false },
@@ -254,6 +263,9 @@ int postroot_neutronKpKm()
 
     { "thetatheta_neutron_kp_data", "#theta_{neutron} vs #theta_{K^{+}} with cut status" , "#theta_{neutron} [degree]" , "#theta_{K^{+}} [degree]" , "Neutron.Theta()*180./3.141592" , "Kp.Theta()*180./3.141592" ,       60, 0.0, 120.0,     60, 0.0, 120.0, status_cut,   false },
     { "thetatheta_neutron_kp_mc", "#theta_{neutron} vs #theta_{K^{+}} with cut status" , "#theta_{neutron} [degree]" , "#theta_{K^{+}} [degree]" , "Neutron.Theta()*180./3.141592" , "Kp.Theta()*180./3.141592" ,       60, 0.0, 120.0,     60, 0.0, 120.0, status_cut,   true },
+
+    { "PP_kp_km_data", "P_{K+} vs P_{K^{-}} with cut status" , "P_{K+} [GeV]" , "P_{K-} [GeV]" , "Kp.P()" , "Km.P()" ,       60, 0.0, 8.0,     60, 0.0, 8.0, status_cut,   false },
+    { "PP_kp_km_mc", "P_{K+} vs P_{K^{-}} with cut status" , "P_{K+} [GeV]" , "P_{K-} [GeV]" , "Kp.P()" , "Km.P()" ,       60, 0.0, 8.0,     60, 0.0, 8.0, status_cut,   true },
 
     //theta vs p
     { "thetavsp_neutron_data", "#theta_{neutron} vs p_{neutron} with all cut" , "#theta_{neutron} [degree]" , "p_{neutron} [GeV]" , "Neutron.Theta()*180./3.141592" , "Neutron.P()" ,       60, 0.0, 120.0,     60, 0.0, 8.0, status_cut + " && " + MM_cut,   false },
@@ -341,7 +353,7 @@ int postroot_neutronKpKm()
     // CANVAS + PDF
     // ===============================
     TCanvas *c = new TCanvas("c", "", 900, 700);
-    TString pdf = "Data_vs_MC_allVars_fall2019outbending_neutronKpKpm_bis2.pdf";
+    TString pdf = "Data_vs_MC_allVars_fall2019outbending_neutronKpKpm_testasupr3_SDME.pdf";
 
     c->Clear();
     c->SetFillColor(0);
@@ -398,7 +410,7 @@ int postroot_neutronKpKm()
 
         // normalisation MC → Data
         if (hMC->Integral() > 0){
-            hMC->Scale((18.3/2)*1.28);
+            hMC->Scale((18.3/39.948000));
             integralMC = hMC->Integral();
         }
 
@@ -416,7 +428,7 @@ int postroot_neutronKpKm()
 
         // style
         hData->SetMinimum(0.01);
-        hData->SetMaximum(hData->GetMaximum()*1.2);
+        hData->SetMaximum(hData->GetMaximum()*1.4);
         hData->SetMarkerStyle(20);
         hData->SetMarkerSize(0.6);   // points plus petits
         hData->SetMarkerColor(kBlue+1);  // points bleus
@@ -504,15 +516,15 @@ int postroot_neutronKpKm()
 
         // legend
         //TLegend *leg = new TLegend(0.60, 0.52, 0.84, 0.72);
-        TLegend *leg = new TLegend(0.60, 0.72, 0.84, 0.92);
+        TLegend *leg = new TLegend(0.65, 0.65, 0.84, 0.85);
         leg->SetBorderSize(0);
         leg->SetFillStyle(0);
         leg->SetTextSize(0.035);
-        TLegendEntry *eData = leg->AddEntry(hData, "Detected neutron", "lep");
+        TLegendEntry *eData = leg->AddEntry(hData, "Data", "lep");
 
         if (p.additionalplot != "Nothing") {
 
-            leg->AddEntry(hData_bis, "Missing_nucleon", "lep");
+            leg->AddEntry(hData_bis, "Missing nucleon", "lep");
 
 
         }
@@ -526,7 +538,7 @@ int postroot_neutronKpKm()
         }
 
             if (hMC_contamination->Integral() > 0 && p.plotMCcontamination){
-            leg->AddEntry(hMC_contamination, "MC proton target", "f");
+            leg->AddEntry(hMC_contamination, "MC proton contamination", "f");
 
             TString mcText_contamination;
             mcText_contamination.Form("Int. MC = %.1f", integralMC_contamination);
@@ -537,7 +549,7 @@ int postroot_neutronKpKm()
         mcText2.Form("Int. DATA = %.1f", integralDATA);
         //leg->AddEntry((TObject*)nullptr, mcText2, "");
 
-        leg->Draw();
+        //leg->Draw();
 
         c->Print(pdf);
     }
@@ -577,6 +589,8 @@ int postroot_neutronKpKm()
     c->SetBottomMargin(0.12);
     c->SetTopMargin(0.08);
 
+
+
     // Draw
     c->Clear();
     h2->Draw("COLZ");
@@ -590,6 +604,59 @@ int postroot_neutronKpKm()
     label += p.globaltitle;
 
     lat.DrawLatex(0.15, 0.95, label);
+
+    
+    // -0.108 -0.7 -1.2 -1.9 -2.8 -8
+
+    TLine *l2 = new TLine(-0.108, 1, -0.108, 6.5);
+    l2->SetLineColor(kBlack);
+    l2->SetLineStyle(1);
+    l2->SetLineWidth(3);
+    l2->Draw("same");
+
+    TLine *l3 = new TLine(-0.7, 1, -0.7, 6.5);
+    l3->SetLineColor(kBlack);
+    l3->SetLineStyle(1);
+    l3->SetLineWidth(3);
+    l3->Draw("same");
+
+    TLine *l4 = new TLine(-1.2, 1, -1.2, 6.5);
+    l4->SetLineColor(kBlack);
+    l4->SetLineStyle(1);
+    l4->SetLineWidth(3);
+    l4->Draw("same");
+
+    TLine *l5 = new TLine(-1.9, 1, -1.9, 6.5);
+    l5->SetLineColor(kBlack);
+    l5->SetLineStyle(1);
+    l5->SetLineWidth(3);
+    l5->Draw("same");
+
+    TLine *l6 = new TLine(-2.8, 1, -2.8, 6.5);
+    l6->SetLineColor(kBlack);
+    l6->SetLineStyle(1);
+    l6->SetLineWidth(3);
+    l6->Draw("same");
+
+    TLine *l7 = new TLine(-8, 1, -8, 6.5);
+    l7->SetLineColor(kBlack);
+    l7->SetLineStyle(1);
+    l7->SetLineWidth(3);
+    l7->Draw("same");
+
+
+    TLine *l8 = new TLine(-9, 1.5, -0.108, 1.5); // ligne horizontale
+    l8->SetLineColor(kBlack);               // couleur
+    l8->SetLineStyle(1);                    // 1 = continue, 2 = pointillée
+    l8->SetLineWidth(3);                    // épaisseur
+    l8->Draw("same");
+
+    TLine *l9 = new TLine(-9, 6.5, -0.108, 6.5); // ligne horizontale
+    l9->SetLineColor(kBlack);               // couleur
+    l9->SetLineStyle(1);                    // 1 = continue, 2 = pointillée
+    l9->SetLineWidth(3);                    // épaisseur
+    l9->Draw("same");
+
 
 
 

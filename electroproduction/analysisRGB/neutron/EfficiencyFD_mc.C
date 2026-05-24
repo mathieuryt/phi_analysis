@@ -234,6 +234,14 @@ void EfficiencyFD_mc() {
     1.0796    // a6
     );
 
+    double parErr[7] = {0.0136, 0.0375, 0.0332, 0.0090, 0.0087, 0.003067, 0.1876};
+
+    for(int i=0;i<7;i++){
+        f_eff_data->SetParError(i, parErr[i]);
+    }
+
+    double err_data = f_eff_data->GetParError(0); // approximation simple
+
    h_rec_p->Sumw2();
    h_gen_p->Sumw2();
    h_eff_p->Sumw2();
@@ -376,13 +384,17 @@ void EfficiencyFD_mc() {
     double err_mc = h_eff_p_tot->GetBinError(i);
 
     double eff_data = f_eff_data->Eval(p_center);
+    //double err_data = f_eff_data->EvalError(p_center);
 
     if (eff_data > -1) {
 
         double ratio = eff_data / eff_mc;
 
         // propagation d'erreur (data supposée sans erreur ici)
-        double err_ratio = 0.01;
+        double err_ratio = ratio * sqrt(
+        pow(err_data/eff_data,2) +
+        pow(err_mc/eff_mc,2)
+        );
 
         h_ratio_p->SetBinContent(i, ratio);
         h_ratio_p->SetBinError(i, err_ratio);
@@ -395,8 +407,8 @@ void EfficiencyFD_mc() {
     h_ratio_p->SetMaximum(1.5);
 
     h_ratio_p->SetMarkerStyle(20);
-    h_ratio_p->SetMarkerColor(kGreen);
-    h_ratio_p->SetLineColor(kGreen);
+    h_ratio_p->SetMarkerColor(kGreen+3);
+    h_ratio_p->SetLineColor(kGreen+3);
 
 
     //pdf
@@ -404,6 +416,7 @@ void EfficiencyFD_mc() {
 
    TString pdfFile = "EfficiencyFD_mc_plots2.pdf";
    TCanvas *c = new TCanvas("c", "Plots", 800, 600);
+   c->SetGrid();
 
    thetavsphi_neutron_rec->Draw("COLZ"); c->Print(pdfFile + "("); 
    thetavsphi_neutron_gen->Draw("COLZ"); c->Print(pdfFile); 
@@ -487,6 +500,16 @@ void EfficiencyFD_mc() {
    c->Print(pdfFile);
 
    h_ratio_p->Draw("E1");
+
+   TLatex latex;
+   latex.SetNDC();
+   latex.SetTextFont(42);          // police fine
+   latex.SetTextSize(0.15);        // plus gros
+   latex.SetTextColorAlpha(kGray+1, 0.20); 
+   latex.SetTextAngle(35);
+   latex.SetTextAlign(22);         // centre exact
+
+   latex.DrawLatex(0.5,0.5,"PRELIMINARY");
 
    c->Print(pdfFile + ")");
 
